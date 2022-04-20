@@ -35,7 +35,7 @@ while true; do
   echo "$leechers" | while read -r leecher; do
     [ -z "$leecher" ] && continue
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
-    client=$(echo "$leecher" | grep -i "$pattern.*$" -o)
+    client=$(echo "$leecher" | grep -i "[^[:space:]]*$pattern.*$" -o)
     ip=$(echo "$leecher" | awk '{ print $1 }')
     line="$client:$ip-$ip"
     grep -qs "$line" "$LIST" && continue
