@@ -36,9 +36,33 @@ TIMEOUT_SECONDS=0
 
 注：规则生效并不意味着立即停止上传，这可能是 Transmission 的问题，如需立即停止上传，建议手动重启。
 
+### Systemd
+
+```sh
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-blocker/master/transmission-block-clients.service -o /etc/systemd/system/transmission-block-clients.service
+```
+
+修改 `/etc/systemd/system/transmission-block-clients.service` 中以下参数：
+
+```sh
+# 用户
+User=debian-transmission
+# 脚本路径
+ExecStart=/path/to/trans-block.sh
+```
+
+执行：
+
+```sh
+$ systemctl daemon-reload
+$ systemctl enable transmission-block-clients.service # 开机启动
+$ systemctl start  transmission-block-clients.service # 立即启动
+$ systemctl status transmission-block-clients.service # 查看状态
+```
+
 # English
 
-A shell script to help Transmission to block IPs of leecher clients, such as Xunlei.
+A shell script for Transmission to block IPs of leecher clients, such as Xunlei.
 
 ## Usage
 
@@ -72,3 +96,26 @@ Then run the script.
 Open the web interface, go to 🔧 -> Peers to check if the rules take effects.
 
 Note that enabling the rules doesn't mean stopping seeding at once, which I believe is a problem of Transmission. Manually restarting Transmission should do the trick.
+
+### Systemd
+
+```sh
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-blocker/master/transmission-block-clients.service -o /etc/systemd/system/transmission-block-clients.service
+```
+
+Edit `/etc/systemd/system/transmission-block-clients.service`:
+
+```sh
+User=debian-transmission
+ExecStart=/path/to/trans-block.sh
+```
+
+Then:
+
+```sh
+$ systemctl daemon-reload
+$ systemctl enable transmission-block-clients.service
+$ systemctl start  transmission-block-clients.service
+$ systemctl status transmission-block-clients.service
+```
+
