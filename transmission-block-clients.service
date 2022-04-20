@@ -1,0 +1,12 @@
+[Unit]
+Description=Clients Blocker for Transmission
+Requires=network.target
+
+[Service]
+User=debian-transmission
+ExecStart=/path/to/trans-block.sh
+CPUSchedulingPolicy=idle
+Nice=19
+
+[Install]
+WantedBy=multi-user.target
