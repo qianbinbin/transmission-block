@@ -31,6 +31,7 @@ while true; do
 
   peers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent all --info-peers)
   leechers=$(echo "$peers" | grep -i "$pattern")
+  stamp=$(stat -c %y "$LIST")
   echo "$leechers" | while read -r leecher; do
     [ -z "$leecher" ] && continue
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
@@ -42,8 +43,10 @@ while true; do
     echo "$line" >>"$LIST"
   done
 
-  # reload: https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings
-  # transmission-remote "$HOST" --auth "$AUTH" --blocklist-update
-  killall -HUP transmission-daemon
+  if [ "$(stat -c %y "$LIST")" != "$stamp" ]; then
+    # reload: https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings
+    echo "Reloading"
+    killall -HUP transmission-daemon
+  fi
   sleep 30
 done
