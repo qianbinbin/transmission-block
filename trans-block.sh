@@ -23,13 +23,13 @@ pattern=$(echo "$CLIENTS" | xargs | sed 's/ /\\)\\|\\(/g')
 pattern="\(\($pattern\)\)"
 
 trans_reload() {
-  echo "Reloading"
+  error "Reloading"
   # reload: https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings
   killall -HUP transmission-daemon
 }
 
 block_leechers() {
-  # echo "Checking leechers for: $(echo "$1" | cut -c -8)"
+  # error "Checking leechers for: $(echo "$1" | cut -c -8)"
   peers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info-peers)
   leechers=$(echo "$peers" | grep -i "$pattern")
   result=1
@@ -41,7 +41,7 @@ block_leechers() {
     ip=$(echo "$leecher" | awk '{ print $1 }')
     line="$client:$ip-$ip"
     grep -qs -- "$line" "$LIST" && continue
-    echo "Blocking for $(echo "$1" | cut -c -8):"
+    error "Blocking for $(echo "$1" | cut -c -8):"
     echo "$line"
     echo "$line" >>"$LIST"
     result=0
@@ -53,7 +53,7 @@ EOF
 }
 
 trans_restart_torrent() {
-  echo "Restarting torrent: $(echo "$1" | cut -c -8)"
+  error "Restarting torrent: $(echo "$1" | cut -c -8)"
   transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop
   sleep 3
   transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start
@@ -63,7 +63,7 @@ start=$(date +%s)
 while true; do
   diff=$(($(date +%s) - start))
   if [ $TIMEOUT_SECONDS -ne 0 ] && [ $diff -ge $TIMEOUT_SECONDS ]; then
-    echo "Clearing blocklist"
+    error "Clearing blocklist"
     rm -f "$LIST"
     rm -f "$BIN"
     start=$(date +%s)
