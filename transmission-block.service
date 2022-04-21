@@ -1,5 +1,5 @@
 [Unit]
-Description=Clients Blocker for Transmission
+Description=Block Specified Clients for Transmission
 Requires=network.target
 
 [Service]

@@ -4,7 +4,12 @@ Transmission 辅助脚本，屏蔽迅雷等吸血客户端的 IP 地址。
 
 ## 使用
 
-在 Transmission [配置文件](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md) 里设置 `"blocklist-enabled": true`。
+在 Transmission [配置文件](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md) 中设置 `"blocklist-enabled": true`。
+
+```sh
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/trans-block.sh -o /path/to/trans-block.sh
+$ chmod +x /path/to/trans-block.sh
+```
 
 编辑脚本，按需修改以下参数：
 
@@ -16,7 +21,7 @@ HOST="localhost:9091"
 # 用户名:密码
 AUTH="username:password"
 
-# 需要屏蔽的客户端，以空格分隔，不区分大小写
+# 需要屏蔽的客户端，仅支持数字和字母，不区分大小写，以空格分隔
 # 只要包含关键字即可，如 "xun" 也会屏蔽 "xunlei"
 CLIENTS="xunlei thunder gt0002 xl0012 xfplay dandanplay dl3760 qq"
 
@@ -34,15 +39,15 @@ TIMEOUT_SECONDS=0
 
 在 Web 管理页面，点击 🔧 -> Peers，查看屏蔽规则是否生效。
 
-注：规则生效并不意味着立即停止上传，这可能是 Transmission 的问题，如需立即停止上传，建议手动重启。
+注：规则生效并不意味着立即停止上传，这可能是 Transmission 的问题，如需立即停止上传，建议手动重启任务或直接重启 Transmission。
 
 ### Systemd
 
 ```sh
-$ curl https://raw.githubusercontent.com/qianbinbin/transmission-blocker/master/transmission-block-clients.service -o /etc/systemd/system/transmission-block-clients.service
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.service -o /etc/systemd/system/transmission-block.service
 ```
 
-修改 `/etc/systemd/system/transmission-block-clients.service` 中以下参数：
+修改 `/etc/systemd/system/transmission-block.service` 中以下参数：
 
 ```sh
 # 用户
@@ -55,9 +60,9 @@ ExecStart=/path/to/trans-block.sh
 
 ```sh
 $ systemctl daemon-reload
-$ systemctl enable transmission-block-clients.service # 开机启动
-$ systemctl start  transmission-block-clients.service # 立即启动
-$ systemctl status transmission-block-clients.service # 查看状态
+$ systemctl enable transmission-block.service # 开机启动
+$ systemctl start  transmission-block.service # 立即启动
+$ systemctl status transmission-block.service # 查看状态
 ```
 
 # English
@@ -68,6 +73,11 @@ A shell script for Transmission to block IPs of leecher clients, such as Xunlei.
 
 Set `"blocklist-enabled": true` in Transmission [configuration file](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md).
 
+```sh
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/trans-block.sh -o /path/to/trans-block.sh
+$ chmod +x /path/to/trans-block.sh
+```
+
 Change these values in the script:
 
 ```sh
@@ -77,7 +87,7 @@ HOST="localhost:9091"
 
 AUTH="username:password"
 
-# Clients to block, split by whitespaces, case insensitive
+# Clients to block, alphanumeric and case insensitive, split by whitespaces
 # Only keywords needed, which means "xun" would also block "xunlei"
 CLIENTS="xunlei thunder gt0002 xl0012 xfplay dandanplay dl3760 qq"
 
@@ -95,15 +105,15 @@ Then run the script.
 
 Open the web interface, go to 🔧 -> Peers to check if the rules take effects.
 
-Note that enabling the rules doesn't mean stopping seeding at once, which I believe is a problem of Transmission. Manually restarting Transmission should do the trick.
+Note that enabling the rules doesn't mean stopping seeding at once, which I believe is a problem of Transmission. Manually restarting the torrent(s) or simply restarting Transmission should do the trick.
 
 ### Systemd
 
 ```sh
-$ curl https://raw.githubusercontent.com/qianbinbin/transmission-blocker/master/transmission-block-clients.service -o /etc/systemd/system/transmission-block-clients.service
+$ curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.service -o /etc/systemd/system/transmission-block.service
 ```
 
-Edit `/etc/systemd/system/transmission-block-clients.service`:
+Edit `/etc/systemd/system/transmission-block.service`:
 
 ```sh
 User=debian-transmission
@@ -114,8 +124,8 @@ Then:
 
 ```sh
 $ systemctl daemon-reload
-$ systemctl enable transmission-block-clients.service
-$ systemctl start  transmission-block-clients.service
-$ systemctl status transmission-block-clients.service
+$ systemctl enable transmission-block.service
+$ systemctl start  transmission-block.service
+$ systemctl status transmission-block.service
 ```
 
