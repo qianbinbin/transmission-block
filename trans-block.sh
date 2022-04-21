@@ -55,6 +55,7 @@ EOF
 trans_restart_torrent() {
   echo "Restarting torrent: $(echo "$1" | cut -c -8)"
   transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop
+  sleep 3
   transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start
 }
 
