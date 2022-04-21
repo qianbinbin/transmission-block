@@ -33,13 +33,14 @@ LIST="$HOME/.config/transmission-daemon/blocklists/leechers.txt"
 # 0 表示永久屏蔽，由于 IP 动态分配，不建议永久屏蔽
 # TIMEOUT_SECONDS=$((60 * 60 * 24)) # 24 小时
 TIMEOUT_SECONDS=0
+
+# 如果检测到吸血客户端，立即重启任务，否则 Transmission 不会立即停止上传
+RESTART_TORRENT=true
 ```
 
 然后运行即可。
 
 在 Web 管理页面，点击 🔧 -> Peers，查看屏蔽规则是否生效。
-
-注：规则生效并不意味着立即停止上传，这可能是 Transmission 的问题，如需立即停止上传，建议手动重启任务或直接重启 Transmission。
 
 ### Systemd
 
@@ -99,13 +100,15 @@ LIST="$HOME/.config/transmission-daemon/blocklists/leechers.txt"
 # 0=disable, not recommended due to dynamic IPs
 # TIMEOUT_SECONDS=$((60 * 60 * 24)) # 24 hours
 TIMEOUT_SECONDS=0
+
+# Restart related torrents immediately if leechers detected,
+# or Transmission won't stop seeding at once
+RESTART_TORRENT=true
 ```
 
 Then run the script.
 
 Open the web interface, go to 🔧 -> Peers to check if the rules take effects.
-
-Note that enabling the rules doesn't mean stopping seeding at once, which I believe is a problem of Transmission. Manually restarting the torrent(s) or simply restarting Transmission should do the trick.
 
 ### Systemd
 
