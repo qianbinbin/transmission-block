@@ -14,10 +14,48 @@ BIN="$LIST.bin"
 # TIMEOUT_SECONDS=$((60 * 60 * 24)) # 24 hours
 TIMEOUT_SECONDS=0
 
+# Restart related torrents immediately if leechers detected
+RESTART_TORRENT=true
+
 error() { echo "$@" >&2; }
 
 pattern=$(echo "$CLIENTS" | xargs | sed 's/ /\\)\\|\\(/g')
 pattern="\(\($pattern\)\)"
+
+trans_reload() {
+  echo "Reloading"
+  # reload: https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings
+  killall -HUP transmission-daemon
+}
+
+block_leechers() {
+  # echo "Checking leechers for: $(echo "$1" | cut -c -8)"
+  peers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info-peers)
+  leechers=$(echo "$peers" | grep -i "$pattern")
+  result=1
+
+  while IFS= read -r leecher; do
+    # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
+    client=$(echo "$leecher" | grep -i "[^[:space:]]*$pattern.*$" -o)
+    ip=$(echo "$leecher" | awk '{ print $1 }')
+    line="$client:$ip-$ip"
+    grep -qs -- "$line" "$LIST" && continue
+    echo "Blocking for $(echo "$1" | cut -c -8):"
+    echo "$line"
+    echo "$line" >>"$LIST"
+    result=0
+  done <<EOF
+$leechers
+EOF
+
+  return $result
+}
+
+trans_restart_torrent() {
+  echo "Restarting torrent: $(echo "$1" | cut -c -8)"
+  transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop
+  transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start
+}
 
 start=$(date +%s)
 while true; do
@@ -27,26 +65,18 @@ while true; do
     rm -f "$LIST"
     rm -f "$BIN"
     start=$(date +%s)
+    trans_reload
   fi
 
-  peers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent all --info-peers)
-  leechers=$(echo "$peers" | grep -i "$pattern")
-  stamp=$(stat -c %y "$LIST")
-  echo "$leechers" | while read -r leecher; do
-    [ -z "$leecher" ] && continue
-    # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
-    client=$(echo "$leecher" | grep -i "[^[:space:]]*$pattern.*$" -o)
-    ip=$(echo "$leecher" | awk '{ print $1 }')
-    line="$client:$ip-$ip"
-    grep -qs "$line" "$LIST" && continue
-    echo "Blocking: $line"
-    echo "$line" >>"$LIST"
+  hashes=$(transmission-remote "$HOST" --auth "$AUTH" --torrent all --info | grep Hash | awk '{ print $2 }')
+  for h in $hashes; do
+    if block_leechers "$h"; then
+      trans_reload
+      if [ $RESTART_TORRENT = true ]; then
+        trans_restart_torrent "$h"
+      fi
+    fi
   done
 
-  if [ "$(stat -c %y "$LIST")" != "$stamp" ]; then
-    # reload: https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings
-    echo "Reloading"
-    killall -HUP transmission-daemon
-  fi
   sleep 30
 done
