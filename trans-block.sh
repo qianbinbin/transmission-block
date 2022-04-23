@@ -37,7 +37,8 @@ block_leechers() {
   while IFS= read -r leecher; do
     [ -z "$leecher" ] && continue
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
-    client=$(echo "$leecher" | grep -i "[^[:space:]]*$pattern.*$" -o)
+    client=$(echo "$leecher" | awk '{ print $6 }')
+    client=$(echo "$leecher" | grep -o -- "$client.*$")
     ip=$(echo "$leecher" | awk '{ print $1 }')
     line="$client:$ip-$ip"
     grep -qs -- "$line" "$LIST" && continue
