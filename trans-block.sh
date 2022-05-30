@@ -55,9 +55,23 @@ EOF
 
 trans_restart_torrent() {
   error "Restarting torrent: $(echo "$1" | cut -c -8)"
-  transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop
+  retry=0
+  while [ $retry -lt 3 ]; do
+    if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop | grep -qs success; then
+      break
+    fi
+    sleep 1
+    : $((retry += 1))
+  done
   sleep 3
-  transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start
+  retry=0
+  while [ $retry -lt 3 ]; do
+    if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start | grep -qs success; then
+      break
+    fi
+    sleep 1
+    : $((retry += 1))
+  done
 }
 
 start=$(date +%s)
