@@ -41,10 +41,13 @@ block_leechers() {
     client=$(echo "$leecher" | grep -o -- "$client.*$")
     ip=$(echo "$leecher" | awk '{ print $1 }')
     line="$client:$ip-$ip"
-    grep -qs -- "$line" "$LIST" && continue
     error "Blocking for $(echo "$1" | cut -c -8):"
-    echo "$line"
-    echo "$line" >>"$LIST"
+    if grep -qs -- "$line" "$LIST"; then
+      error "Duplicate: $line"
+    else
+      echo "$line"
+      echo "$line" >>"$LIST"
+    fi
     result=0
   done <<EOF
 $leechers
