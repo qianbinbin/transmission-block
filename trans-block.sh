@@ -4,7 +4,7 @@ HOST="localhost:9091"
 
 AUTH="username:password"
 
-CLIENTS="xunlei thunder gt0002 xl0012 xfplay dandanplay dl3760 qq"
+CLIENTS="xunlei thunder gt0002 xl0012 xf dandanplay dl3760 qq"
 
 LIST="$HOME/.config/transmission-daemon/blocklists/leechers.txt"
 BIN="$LIST.bin"
