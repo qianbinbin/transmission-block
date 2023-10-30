@@ -1,6 +1,10 @@
 [English](#English)
 
+---
+
 Transmission 辅助脚本，屏蔽迅雷等吸血客户端的 IP 地址。
+
+Windows 用户可参考：https://github.com/qianbinbin/transmission-block/issues/1
 
 ## 使用
 
