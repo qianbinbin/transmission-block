@@ -57,24 +57,49 @@ EOF
 }
 
 trans_restart_torrent() {
-  error "Restarting torrent: $(echo "$1" | cut -c -8)"
-  retry=0
-  while [ $retry -lt 3 ]; do
+  hash_short="$(echo "$1" | cut -c -8)"
+  error "Restarting torrent: $hash_short"
+  retry_max=5
+  for _ in $(seq 0 "$retry_max"); do
     if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop | grep -qs success; then
       break
     fi
     sleep 1
-    : $((retry += 1))
   done
-  sleep 3
-  retry=0
-  while [ $retry -lt 3 ]; do
+  stopped=false
+  for _ in $(seq 0 "$retry_max"); do
+    if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info | grep -qs 'State: Stopped'; then
+      error "Stopped $hash_short successfully"
+      stopped=true
+      break
+    fi
+    sleep 1
+  done
+  if [ "$stopped" = false ]; then
+    error "Unable to stop $hash_short, skipping"
+    return 1
+  fi
+
+  for _ in $(seq 0 "$retry_max"); do
     if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --start | grep -qs success; then
       break
     fi
     sleep 1
-    : $((retry += 1))
   done
+  for _ in $(seq 0 "$retry_max"); do
+    if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info | grep -qs 'State: Stopped'; then
+      sleep 1
+      continue
+    fi
+    error "Started $hash_short successfully"
+    stopped=false
+    break
+  done
+  if [ "$stopped" = true ]; then
+    error "Unable to start $hash_short"
+    error "You may have to start $hash_short manually"
+    return 1
+  fi
 }
 
 start=$(date +%s)
