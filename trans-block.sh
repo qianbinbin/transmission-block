@@ -19,6 +19,10 @@ RESTART_TORRENT=true
 
 error() { echo "$@" >&2; }
 
+HASH_SHORT=
+
+error_with_hash_tag() { error "[$HASH_SHORT]" "$@"; }
+
 pattern=$(echo "$CLIENTS" | xargs | sed 's/ /\\)\\|\\(/g')
 pattern="\(\($pattern\)\)"
 
@@ -29,7 +33,6 @@ trans_reload() {
 }
 
 block_leechers() {
-  # error "Checking leechers for: $(echo "$1" | cut -c -8)"
   peers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info-peers)
   leechers=$(echo "$peers" | grep -i "$pattern")
   result=1
@@ -41,9 +44,9 @@ block_leechers() {
     client=$(echo "$leecher" | grep -o -- "$client.*$")
     ip=$(echo "$leecher" | awk '{ print $1 }')
     line="$client:$ip-$ip"
-    error "Blocking for $(echo "$1" | cut -c -8):"
+    error_with_hash_tag "Blocking leecher"
     if grep -qs -- "$line" "$LIST"; then
-      error "Duplicate: $line"
+      error_with_hash_tag "Duplicate: $line"
     else
       echo "$line"
       echo "$line" >>"$LIST"
@@ -57,8 +60,7 @@ EOF
 }
 
 trans_restart_torrent() {
-  hash_short="$(echo "$1" | cut -c -8)"
-  error "Restarting torrent: $hash_short"
+  error_with_hash_tag "Restarting"
   retry_max=5
   for _ in $(seq 0 "$retry_max"); do
     if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --stop | grep -qs success; then
@@ -69,14 +71,14 @@ trans_restart_torrent() {
   stopped=false
   for _ in $(seq 0 "$retry_max"); do
     if transmission-remote "$HOST" --auth "$AUTH" --torrent "$1" --info | grep -qs 'State: Stopped'; then
-      error "Stopped $hash_short successfully"
+      error_with_hash_tag "Stopped"
       stopped=true
       break
     fi
     sleep 1
   done
   if [ "$stopped" = false ]; then
-    error "Unable to stop $hash_short, skipping"
+    error_with_hash_tag "Unable to stop, skipping"
     return 1
   fi
 
@@ -91,13 +93,13 @@ trans_restart_torrent() {
       sleep 1
       continue
     fi
-    error "Started $hash_short successfully"
+    error_with_hash_tag "Started"
     stopped=false
     break
   done
   if [ "$stopped" = true ]; then
-    error "Unable to start $hash_short"
-    error "You may have to start $hash_short manually"
+    error_with_hash_tag "Unable to start"
+    error_with_hash_tag "You may have to start manually"
     return 1
   fi
 }
@@ -115,6 +117,7 @@ while true; do
 
   hashes=$(transmission-remote "$HOST" --auth "$AUTH" --torrent all --info | grep Hash | awk '{ print $2 }')
   for h in $hashes; do
+    HASH_SHORT="$(echo "$h" | cut -c -8)"
     if block_leechers "$h"; then
       trans_reload
       if [ $RESTART_TORRENT = true ]; then
