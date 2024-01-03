@@ -4,7 +4,7 @@ HOST="localhost:9091"
 
 AUTH="username:password"
 
-CLIENTS="xunlei thunder gt0002 xl0012 xf dandanplay dl3760 qq"
+CLIENTS="xunlei thunder gt[[:digit:]]\{4\} xl0012 xf dandanplay dl3760 qq"
 
 LIST="$HOME/.config/transmission-daemon/blocklists/leechers.txt"
 BIN="$LIST.bin"
@@ -19,7 +19,7 @@ RESTART_TORRENT=true
 
 error() { echo "$@" >&2; }
 
-pattern=$(echo "$CLIENTS" | xargs | sed 's/ /\\)\\|\\(/g')
+pattern=$(echo "$CLIENTS" | xargs -0 | sed 's/ /\\)\\|\\(/g')
 pattern="\(\($pattern\)\)"
 
 trans_reload() {
