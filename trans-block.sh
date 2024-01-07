@@ -4,7 +4,7 @@ HOST="localhost:9091"
 
 AUTH="username:password"
 
-CLIENTS="xunlei thunder gt[[:digit:]]\{4\} xl0012 xf dandanplay dl3760 qq"
+CLIENTS="xunlei thunder gt[[:digit:]]\{4\} xl0012 xf dandanplay dl3760 qq libtorrent"
 
 LIST="$HOME/.config/transmission-daemon/blocklists/leechers.txt"
 BIN="$LIST.bin"
