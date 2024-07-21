@@ -25,9 +25,12 @@ HOST="localhost:9091"
 # 用户名:密码
 AUTH="username:password"
 
-# 需要屏蔽的客户端，仅支持数字和字母，不区分大小写，以空格分隔
+# 需要屏蔽的客户端，不区分大小写，以空格分隔
+# 脚本会使用 grep 匹配 POSIX 正则：https://remram44.github.io/regex-cheatsheet/regex.html
 # 只要包含关键字即可，如 "xun" 也会屏蔽 "xunlei"
-CLIENTS="xunlei thunder gt0002 xl0012 xfplay dandanplay dl3760 qq"
+# thunder 是迅雷较新客户端，据一些用户称它也会上传
+# libtorrent 被迅雷服务器使用，但也有正常用户使用，可能会误伤
+CLIENTS="xunlei thunder gt[[:digit:]]\{4\} xl0012 xf dandanplay dl3760 qq libtorrent"
 
 # 屏蔽列表文件，在配置目录的 blocklists 文件夹下
 # https://github.com/transmission/transmission/blob/main/docs/Blocklists.md
@@ -42,7 +45,7 @@ TIMEOUT_SECONDS=0
 RESTART_TORRENT=true
 ```
 
-然后运行即可。
+然后以 Transmission 进程相同用户运行即可。
 
 在 Web 管理页面，点击 🔧 -> Peers，查看屏蔽规则是否生效。
 
@@ -72,7 +75,7 @@ $ systemctl status transmission-block.service # 查看状态
 
 # English
 
-A shell script for Transmission to block IPs of leecher clients, such as Xunlei.
+A shell script for Transmission blocking IPs of leecher clients, such as Xunlei.
 
 ## Usage
 
@@ -92,9 +95,12 @@ HOST="localhost:9091"
 
 AUTH="username:password"
 
-# Clients to block, alphanumeric and case insensitive, split by whitespaces
-# Only keywords needed, which means "xun" would also block "xunlei"
-CLIENTS="xunlei thunder gt0002 xl0012 xfplay dandanplay dl3760 qq"
+# Clients to block, case insensitive, split by whitespaces
+# The script will use grep to match POSIX regex: https://remram44.github.io/regex-cheatsheet/regex.html
+# Only keywords are needed, which means "xun" would also block "xunlei"
+# thunder is the new version of xunlei, may upload as reported by some users
+# libtorrent is used by Xunlei servers, but may also be used by normal users
+CLIENTS="xunlei thunder gt[[:digit:]]\{4\} xl0012 xf dandanplay dl3760 qq libtorrent"
 
 # Blocklist file in its configuration folder
 # https://github.com/transmission/transmission/blob/main/docs/Blocklists.md
@@ -110,7 +116,7 @@ TIMEOUT_SECONDS=0
 RESTART_TORRENT=true
 ```
 
-Then run the script.
+Then run the script with the same user running the transmission process.
 
 Open the web interface, go to 🔧 -> Peers to check if the rules take effects.
 
