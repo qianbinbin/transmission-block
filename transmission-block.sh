@@ -31,8 +31,8 @@ Examples:
   # block IPs of default clients, see --block-client
   $(basename "$0")
 
-  # block clients and IPs from external blocklist
-  $(basename "$0") --external-bl https://mirror.codebucket.de/transmission/blocklist.p2p.gz
+  # block default clients and IPs in external blocklist
+  $(basename "$0") --external-bl https://www.example.com/blocklist
 
 Options:
   -s, --tr-server <host:port>
@@ -231,6 +231,7 @@ tr_tblock() {
       error "[$hash_short] v$TR_VERSION doesn't support IPv6 blocklist, at least v4.0.0 is required, skipping"
       continue
     }
+    error "[$hash_short] blocking $client: $ip"
     echo "$client:$ip-$ip" | tee -a "$LEECHER_LIST"
   done
 }
@@ -251,7 +252,7 @@ update_leechers() (
       for hash in $(tr_hashes); do
         [ -n "$(tr_tblock "$hash")" ] && {
           rl=0
-          [ $RESTART_TORRENT = true ] && tr_trestart "$hash"
+          [ "$RESTART_TORRENT" = true ] && tr_trestart "$hash"
         }
       done
       release_file "$LEECHER_LIST"
