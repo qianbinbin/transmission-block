@@ -8,7 +8,7 @@
 
 [ -z "$TR_SERVER" ] && TR_SERVER="127.0.0.1:9091"
 [ -z "$BL_SERVER" ] && BL_SERVER="127.0.0.1:9098"
-[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS="xunlei thunder gt[0-9]{4} xl0012 xf dandanplay dl3760 qq libtorrent"
+[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS="xunlei thunder gt[0-9]{4} xl0012 xfplay baidu dandanplay qqdownload libtorrent"
 [ -z "$WORK_DIR" ] && WORK_DIR=./transmission-block
 # [ -z "$EXTERNAL_BL" ] && EXTERNAL_BL=
 [ -z "$CLEAR_INTERVAL" ] && CLEAR_INTERVAL=7d # set to 0 to disable
