@@ -407,8 +407,9 @@ run_web_server() (
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 cleanup() {
-  find "$WORK_DIR" -type f \( -name '*.conf' -or -name '*.tmp' \) -delete
-  find "$WORK_DIR" -type d -name '*.lock' -delete
+  # Add the suffix '/' in case that $WORK_DIR is a symlink
+  find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.tmp' \) -delete
+  find "$WORK_DIR/" -type d -name '*.lock' -delete
 }
 
 # shellcheck disable=SC2317
@@ -433,12 +434,14 @@ reload() {
 stop() {
   error "stopping"
   # exist pstree && pstree -p $$
-  for pid in $LEECHER_PID $EXTERNAL_PID $WEBSERVER_PID; do
-    kill -0 "-$pid" 2>/dev/null && kill -- "-$pid"
-  done
+  tty -s && {
+    for pid in $LEECHER_PID $EXTERNAL_PID $WEBSERVER_PID; do
+      kill -0 "-$pid" 2>/dev/null && kill -- "-$pid"
+    done
+  }
   cleanup
   error "stopped"
-  exit
+  exit 0
 }
 
 trap reload HUP
@@ -450,21 +453,21 @@ cleanup
   # Put all child processes in a separate group, so that we can kill them all in
   # the main process; we don't use kill -- -$$ because it may kill itself before
   # killing the whole tree
-  set -m
+  tty -s && set -m
   update_leechers &
-  set +m
+  tty -s && set +m
   # PID is also the GPID
   LEECHER_PID=$!
 }
 [ -n "$EXTERNAL_BL" ] && {
-  set -m
+  tty -s && set -m
   update_external_lists &
-  set +m
+  tty -s && set +m
   EXTERNAL_PID=$!
 }
-set -m
+tty -s && set -m
 run_web_server &
-set +m
+tty -s && set +m
 WEBSERVER_PID=$!
 
 # wait can be interrupted by signals so we put it in while loop
