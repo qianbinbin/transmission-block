@@ -8,10 +8,11 @@
 
 [ -z "$TR_SERVER" ] && TR_SERVER="127.0.0.1:9091"
 [ -z "$BL_SERVER" ] && BL_SERVER="127.0.0.1:9098"
+# https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc
 [ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS="xunlei thunder gt[0-9]{4} xl0012 xfplay baidu dandanplay qqdownload libtorrent"
 [ -z "$WORK_DIR" ] && WORK_DIR=./transmission-block
 # [ -z "$EXTERNAL_BL" ] && EXTERNAL_BL=
-[ -z "$CLEAR_INTERVAL" ] && CLEAR_INTERVAL=7d # set to 0 to disable
+[ -z "$CLEAR_INTERVAL" ] && CLEAR_INTERVAL=7d
 [ -z "$RESTART_TORRENT" ] && RESTART_TORRENT=true
 [ -z "$RENEW_INTERVAL" ] && RENEW_INTERVAL=1d
 
@@ -131,7 +132,7 @@ done
 exist transmission-remote || { error "transmission-remote not found" && exit 127; }
 echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid transmission server: '$TR_SERVER'" && _exit; }
 echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid blocklist server: '$BL_SERVER'" && _exit; }
-[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify by --block-client and/or --external-bl" && _exit
+[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify --block-client and/or --external-bl" && _exit
 EXTERNAL_BL=$(echo "$EXTERNAL_BL" | xargs | tr ' ' '\n' | sort -u | xargs)
 echo "$CLEAR_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "invalid clear interval: '$CLEAR_INTERVAL'" && _exit; }
 echo "$RENEW_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "invalid renew interval: '$RENEW_INTERVAL'" && _exit; }
@@ -181,7 +182,6 @@ TR_VERSION=$(tr_remote --session-info | sed -n -E 's/.*Daemon version: ([^ ]*).*
 error "connected to $TR_SERVER, v$TR_VERSION"
 # '--torrent active' is not really active
 tr_hashes() { tr_remote --torrent all --info | grep Hash: | awk '{ print $2 }'; }
-# shellcheck disable=SC2317
 tr_update_bl() {
   if res=$(tr_remote --blocklist-update 2>&1); then
     echo "$res" | grep -qs success && return 0
@@ -196,18 +196,23 @@ tr_tstop() { tr_remote --torrent "$1" --stop | grep -qs success; }
 tr_tstopped() { tr_remote --torrent "$1" --info | grep -qs 'State: Stopped'; }
 # Only apply to active torrents, not working for finished/will verify/verifying
 tr_trestart() {
+  hash_short="$(echo "$1" | cut -c -8)"
+  error "[$hash_short] restarting"
   tr_retry=$(seq 10)
   for _ in $tr_retry; do
     tr_tstop "$1"
     tr_tstopped "$1" && break
     sleep 1
   done
-  tr_tstopped "$1" || return 1
+  tr_tstopped "$1" || { error "[$hash_short] could not stop" && return 1; }
+  sleep 5 # transmission tends to keep the connection
+  error "[$hash_short] stopped, starting"
   for _ in $tr_retry; do
     tr_tstart "$1"
-    tr_tstopped "$1" || return 0
+    tr_tstopped "$1" || { error "[$hash_short] started" && return 0; }
     sleep 1
   done
+  error "[$hash_short] could not start, you may have to restart manually"
   return 1
 }
 
@@ -219,7 +224,9 @@ tr_tblock() {
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
     ip=$(echo "$leecher" | awk '{ print $1 }')
     grep -qs "$(echo "$ip" | sed 's/\./\\./g')" "$LEECHER_LIST" && {
-      error "[$hash_short] '$ip': already exists in $LEECHER_LIST, skipping"
+      error "[$hash_short] '$ip': already exists in blocklist, skipping"
+      error "[$hash_short] trying to restart"
+      tr_trestart "$1"
       continue
     }
     # Remove ':'s in the first field
@@ -228,7 +235,8 @@ tr_tblock() {
     # https://github.com/transmission/transmission/releases/tag/4.0.0
     ! is_ipv4 "$ip" && [ "$(echo "$TR_VERSION" | cut -c -1)" -lt 4 ] && {
       error "[$hash_short] '$ip':"
-      error "[$hash_short] v$TR_VERSION doesn't support IPv6 blocklist, at least v4.0.0 is required, skipping"
+      error "[$hash_short] v$TR_VERSION doesn't support IPv6 blocklist"
+      error "[$hash_short] at least v4.0.0 is required, skipping"
       continue
     }
     error "[$hash_short] blocking $client: $ip"
@@ -240,24 +248,28 @@ update_leechers() (
   error() { echo "$@" | sed 's/^/[leecher] /g' >&2; }
   start=$(date +%s)
   while true; do
-    acquire_file "$LEECHER_LIST" && {
-      rl=1
-      diff=$(($(date +%s) - start))
-      [ "$CLEAR_INTERVAL" -ne 0 ] && [ $diff -ge "$CLEAR_INTERVAL" ] && {
-        error "clearing leecher blocklist"
+    diff=$(($(date +%s) - start))
+    [ "$CLEAR_INTERVAL" -ne 0 ] && [ $diff -ge "$CLEAR_INTERVAL" ] && {
+      error "clearing leecher blocklist"
+      acquire_file "$LEECHER_LIST" && {
         : >"$LEECHER_LIST"
-        start=$(date +%s)
-        rl=0
+        release_file "$LEECHER_LIST"
       }
-      for hash in $(tr_hashes); do
-        [ -n "$(tr_tblock "$hash")" ] && {
-          rl=0
-          [ "$RESTART_TORRENT" = true ] && tr_trestart "$hash"
-        }
-      done
-      release_file "$LEECHER_LIST"
-      [ "$rl" -eq 0 ] && request_reload
+      request_reload
+      start=$(date +%s)
     }
+    for hash in $(tr_hashes); do
+      rl=1
+      acquire_file "$LEECHER_LIST" && {
+        [ -n "$(tr_tblock "$hash")" ] && rl=0
+        release_file "$LEECHER_LIST"
+      }
+      [ $rl -eq 0 ] && {
+        request_reload && sleep 3
+        # Let's hope reloading complete before restarting
+        [ "$RESTART_TORRENT" = true ] && tr_trestart "$hash"
+      }
+    done
     sleep 30
   done
 )
@@ -270,10 +282,8 @@ update_leechers() (
 # EXTERNAL LIST
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-if [ -n "$EXTERNAL_BL" ]; then
-  EXTERNAL_DIR="$WORK_DIR/external"
-  mkdir -p "$EXTERNAL_DIR" || exit 1
-fi
+EXTERNAL_DIR="$WORK_DIR/external"
+[ -n "$EXTERNAL_BL" ] && { mkdir -p "$EXTERNAL_DIR" || exit 1; }
 
 _curl() { curl -fsSL --retry 5 "$@"; }
 
@@ -287,17 +297,31 @@ else
   error "no md5 tool found" && exit 127
 fi
 
+URL_HASHES=
+for u in $EXTERNAL_BL; do URL_HASHES="$URL_HASHES $(printf '%s' "$u" | do_md5)"; done
+URL_HASHES=$(echo "$URL_HASHES" | xargs | tr ' ' '\n')
+cleanup_extern_dir() {
+  _ret=1
+  for _f in "$EXTERNAL_DIR"/*; do
+    fprefix=$(basename "$_f") && fprefix=${fprefix%.*}
+    echo "$URL_HASHES" | grep -qs "^$fprefix$" && continue
+    error "deleting '$_f'" && rm "$_f"
+    _ret=0
+  done
+  return $_ret
+}
+
 xcat() {
-  ret=0
-  for f in "$@"; do
-    case "$(file -b "$f")" in
-    gzip*) gzip -cd "$f" || ret=1 ;;
-    Zip*) unzip -p "$f" || ret=1 ;; # 7z e -so "$f"
-    *text*) cat "$f" || ret=1 ;;
-    *) error "'$f': unknown file" && ret=1 ;;
+  __ret=0
+  for __f in "$@"; do
+    case "$(file -b "$__f")" in
+    gzip*) gzip -cd "$__f" || __ret=1 ;;
+    Zip*) unzip -p "$__f" || __ret=1 ;; # 7z e -so "$__f"
+    *text*) cat "$__f" || __ret=1 ;;
+    *) error "'$__f': unknown file" && __ret=1 ;;
     esac
   done
-  return $ret
+  return $__ret
 }
 
 update_external_lists() (
@@ -305,11 +329,9 @@ update_external_lists() (
   while true; do
     rl=1
     acquire_file "$EXTERNAL_DIR" && {
-      url_hashes=
       for url in $EXTERNAL_BL; do
         error "updating '$url'"
         url_hash=$(printf '%s' "$url" | do_md5)
-        url_hashes="$url_hashes $url_hash"
         etag=$(_curl --head "$url" | grep -i '^etag: ' | cut -c 7-)
         grep -qs "^$etag$" "$EXTERNAL_DIR/$url_hash.etag" && {
           error "no need to update '$url'"
@@ -331,16 +353,10 @@ update_external_lists() (
         error "updated"
         rl=0
       done
-      url_hashes=$(echo "$url_hashes" | xargs | tr ' ' '\n')
-      for f in "$EXTERNAL_DIR"/*; do
-        fprefix=$(basename "$f") && fprefix=${fprefix%.*}
-        echo "$url_hashes" | grep -qs "^$fprefix$" && continue
-        error "deleting outdated file '$f'" && rm "$f"
-        rl=0
-      done
+      cleanup_extern_dir && rl=0
       release_file "$EXTERNAL_DIR"
-      [ $rl -eq 0 ] && request_reload
     }
+    [ $rl -eq 0 ] && request_reload
     sleep "$RENEW_INTERVAL"
   done
 )
@@ -407,23 +423,39 @@ run_web_server() (
 # MAIN PROCESS
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-cleanup() {
+# Call this before starting background processes
+cleanup_pre() {
   # Add the suffix '/' in case that $WORK_DIR is a symlink
-  find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.tmp' \) -delete
+  find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.pid' -or -name '*.tmp' \) -delete
   find "$WORK_DIR/" -type d -name '*.lock' -delete
 }
 
-# shellcheck disable=SC2317
+cleanup() {
+  [ -z "$LEECHER_CLIENTS" ] && rm -f "$LEECHER_LIST"
+  if [ -z "$EXTERNAL_BL" ]; then
+    rm -rf "$EXTERNAL_DIR"
+  else
+    acquire_file "$EXTERNAL_DIR" && {
+      cleanup_extern_dir
+      release_file "$EXTERNAL_DIR"
+    }
+  fi
+}
+
 reload() {
   error "reloading"
   : >"$WEB_DIR/blocklist.p2p"
-  acquire_file "$LEECHER_LIST" && {
-    [ -f "$LEECHER_LIST" ] && cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p"
-    release_file "$LEECHER_LIST"
+  [ -n "$LEECHER_CLIENTS" ] && {
+    acquire_file "$LEECHER_LIST" && {
+      [ -f "$LEECHER_LIST" ] && cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p"
+      release_file "$LEECHER_LIST"
+    }
   }
-  acquire_file "$EXTERNAL_DIR" && {
-    ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 && xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p"
-    release_file "$EXTERNAL_DIR"
+  [ -n "$EXTERNAL_BL" ] && {
+    acquire_file "$EXTERNAL_DIR" && {
+      ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 && xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p"
+      release_file "$EXTERNAL_DIR"
+    }
   }
   gzip -f "$WEB_DIR/blocklist.p2p" || return 1
   error "blocklist URL: 'http://$BL_SERVER/blocklist.p2p.gz'"
@@ -448,6 +480,7 @@ stop() {
 trap reload HUP
 trap stop INT TERM
 
+cleanup_pre
 cleanup
 
 [ -n "$LEECHER_CLIENTS" ] && {
@@ -470,6 +503,8 @@ tty -s && set -m
 run_web_server &
 tty -s && set +m
 WEBSERVER_PID=$!
+
+reload
 
 # wait can be interrupted by signals so we put it in while loop
 while ! { [ -n "$LEECHER_CLIENTS" ] && ! proc_alive "$LEECHER_PID"; } &&
