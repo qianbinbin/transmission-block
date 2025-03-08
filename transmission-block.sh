@@ -224,9 +224,8 @@ tr_tblock() {
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
     ip=$(echo "$leecher" | awk '{ print $1 }')
     grep -qs "$(echo "$ip" | sed 's/\./\\./g')" "$LEECHER_LIST" && {
+      # libTorrent (Rakshasa) lingers like a ghost; simply restarting doesn't work
       error "[$hash_short] '$ip': already exists in blocklist, skipping"
-      error "[$hash_short] trying to restart"
-      tr_trestart "$1"
       continue
     }
     # Remove ':'s in the first field
@@ -265,9 +264,9 @@ update_leechers() (
         release_file "$LEECHER_LIST"
       }
       [ $rl -eq 0 ] && {
-        request_reload && sleep 3
+        request_reload
         # Let's hope reloading complete before restarting
-        [ "$RESTART_TORRENT" = true ] && tr_trestart "$hash"
+        [ "$RESTART_TORRENT" = true ] && sleep 3 && tr_trestart "$hash"
       }
     done
     sleep 30
