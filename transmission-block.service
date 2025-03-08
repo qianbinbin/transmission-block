@@ -1,12 +1,15 @@
 [Unit]
-Description=Block Specified Clients for Transmission
-Requires=network.target
+Description=Block Leecher Clients and Bad IPs for Transmission
+Documentation=https://github.com/qianbinbin/transmission-block
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-User=debian-transmission
-ExecStart=/path/to/trans-block.sh
-CPUSchedulingPolicy=idle
-Nice=19
+DynamicUser=yes
+EnvironmentFile=/usr/local/etc/transmission-block/transmission-block.conf
+StateDirectory=%p
+ExecStart=/usr/local/bin/transmission-block -d "$STATE_DIRECTORY"
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target
