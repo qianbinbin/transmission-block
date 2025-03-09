@@ -130,7 +130,8 @@ done
 
 [ -z "$TR_AUTH" ] && error "the TR_AUTH environment variable is not set" && exit 1
 exist transmission-remote || { error "transmission-remote not found" && exit 127; }
-echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid transmission server: '$TR_SERVER'" && _exit; }
+# <host:port> is not necessary; allow reverse proxy
+# echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid transmission server: '$TR_SERVER'" && _exit; }
 echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid blocklist server: '$BL_SERVER'" && _exit; }
 [ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify --block-client and/or --external-bl" && _exit
 EXTERNAL_BL=$(echo "$EXTERNAL_BL" | xargs | tr ' ' '\n' | sort -u | xargs)
