@@ -304,6 +304,7 @@ URL_HASHES=
 for u in $EXTERNAL_BL; do URL_HASHES="$URL_HASHES $(printf '%s' "$u" | do_md5)"; done
 URL_HASHES=$(echo "$URL_HASHES" | xargs | tr ' ' '\n')
 cleanup_extern_dir() {
+  ls "$EXTERNAL_DIR"/* >/dev/null 2>&1 || return 0
   _ret=1
   for _f in "$EXTERNAL_DIR"/*; do
     fprefix=$(basename "$_f") && fprefix=${fprefix%.*}
