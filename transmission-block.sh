@@ -129,7 +129,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ -z "$TR_AUTH" ] && error "the TR_AUTH environment variable is not set" && exit 1
-exist transmission-remote || { error "transmission-remote not found" && exit 127; }
+exist transmission-remote || { error "transmission-remote: command not found" && exit 127; }
 # <host:port> is not necessary; allow reverse proxy
 # echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid transmission server: '$TR_SERVER'" && _exit; }
 echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid blocklist server: '$BL_SERVER'" && _exit; }
@@ -283,7 +283,10 @@ update_leechers() (
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 EXTERNAL_DIR="$WORK_DIR/external"
-[ -n "$EXTERNAL_BL" ] && { mkdir -p "$EXTERNAL_DIR" || exit 1; }
+[ -n "$EXTERNAL_BL" ] && {
+  mkdir -p "$EXTERNAL_DIR" || exit 1
+  exist file || { error "file: command not found" exit 127; }
+}
 
 _curl() { curl -fsSL --retry 5 "$@"; }
 
@@ -409,7 +412,7 @@ run_web_server() (
       error "require Python >= 3.7, but got $(python3 -V | awk '{ printf $2 }')"
     fi
   else
-    error "no web server found"
+    error "no web server program found"
   fi
   error "exiting unexpectedly"
   kill $$
