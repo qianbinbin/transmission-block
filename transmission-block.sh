@@ -63,7 +63,9 @@ $(echo "(default: '$LEECHER_CLIENTS')" | fmt -w 52 -s | sed "s/^/$(printf '%22s'
                       (default: $BL_SERVER)
   -n, --no-restart    do not restart the torrent if leechers detected, which
                       means the blocklist would not take effect immediately; see
-                      issue #732 in the Transmission GitHub repo
+                      issue #732 in the Transmission GitHub repo, which is
+                      expected to be fixed in v4.1.0, and this option will not
+                      work for versions >= v4.1.0
   -h, --help          display this help and exit
 
 Home page: <https://github.com/qianbinbin/transmission-block>
@@ -179,6 +181,8 @@ LEECHER_LIST="$WORK_DIR/leechers.p2p"
 
 tr_remote() { transmission-remote "$TR_SERVER" --authenv "$@"; }
 TR_VERSION=$(tr_remote --session-info | sed -n -E 's/.*Daemon version: ([^ ]*).*/\1/p')
+TR_MAJOR_V=$(echo "$TR_VERSION" | awk -F '.' '{ print $1 }')
+TR_MINOR_V=$(echo "$TR_VERSION" | awk -F '.' '{ print $2 }')
 [ -z "$TR_VERSION" ] && error "could not connect to $TR_SERVER" && exit 1
 error "connected to $TR_SERVER, v$TR_VERSION"
 # '--torrent active' is not really active
@@ -234,7 +238,7 @@ tr_tblock() {
     error "[$hash_short] blocking $client: $ip"
     # Support IPv6 blocklist starting from v4.0.0
     # https://github.com/transmission/transmission/releases/tag/4.0.0
-    ! is_ipv4 "$ip" && [ "$(echo "$TR_VERSION" | cut -c -1)" -lt 4 ] && {
+    ! is_ipv4 "$ip" && [ "$TR_MAJOR_V" -lt 4 ] && {
       error "[$hash_short] v$TR_VERSION doesn't support IPv6 blocklist"
       error "[$hash_short] at least v4.0.0 is required, skipping"
       continue
@@ -267,8 +271,13 @@ update_leechers() (
       }
       [ $rl -eq 0 ] && {
         request_reload
-        # Let's hope reloading complete before restarting
-        [ "$RESTART_TORRENT" = true ] && sleep 3 && tr_trestart "$hash"
+        if [ "$RESTART_TORRENT" = true ]; then
+          if [ "$TR_MAJOR_V" -lt 4 ] || { [ "$TR_MAJOR_V" -eq 4 ] && [ "$TR_MINOR_V" -lt 1 ]; }; then
+            # Let's hope reloading complete before restarting
+            sleep 3
+            tr_trestart "$hash"
+          fi
+        fi
       }
     done
     sleep 30
