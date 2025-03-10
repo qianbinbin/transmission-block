@@ -9,7 +9,7 @@
 [ -z "$TR_SERVER" ] && TR_SERVER="127.0.0.1:9091"
 [ -z "$BL_SERVER" ] && BL_SERVER="127.0.0.1:9098"
 # https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc
-[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS="xunlei thunder gt[0-9]{4} xl0012 xfplay baidu dandanplay qqdownload libtorrent"
+[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS='-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa),libtorrent (Rasterbar),QQDownload,Thunder,Xfplay,Xunlei'
 [ -z "$WORK_DIR" ] && WORK_DIR=./transmission-block
 # [ -z "$EXTERNAL_BL" ] && EXTERNAL_BL=
 [ -z "$CLEAR_INTERVAL" ] && CLEAR_INTERVAL=7d
@@ -40,9 +40,9 @@ Options:
                       connect to Transmission at <host:port>
                       (default: $TR_SERVER)
   -c, --block-client <pattern>
-                      clients to block; <pattern> should be case-insensitive
-                      regexes separated by spaces, with ERE (POSIX extended)
-                      flavor which is used by egrep; set to '' to disable
+                      clients to block; <pattern> should be case-sensitive
+                      regexes with BRE (POSIX) flavor separated by ','s; set to
+                      '' to disable
 $(echo "(default: '$LEECHER_CLIENTS')" | fmt -w 52 -s | sed "s/^/$(printf '%22s' '')/")
   -i, --clear-interval <num[suffix]>
                       clear the local blocklist generated from --block-client
@@ -87,7 +87,7 @@ while [ $# -gt 0 ]; do
     ;;
   -c | --block-client)
     [ -n "$2" ] || _exit
-    LEECHER_CLIENTS="$(echo "$2" | xargs)"
+    LEECHER_CLIENTS="$2"
     shift 2
     ;;
   -i | --clear-interval)
@@ -218,28 +218,29 @@ tr_trestart() {
 }
 
 is_ipv4() { echo "$1" | grep -qs -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'; }
+LEECHER_RE="\(\($(echo "$LEECHER_CLIENTS" | sed 's/,/\\)\\|\\(/g')\)\)"
 tr_tblock() {
   hash_short="$(echo "$1" | cut -c -8)"
-  leecher_re="^([^ ]+ +){5}.*(($(echo "$LEECHER_CLIENTS" | sed 's/ /)|(/g'))).*$"
-  tr_tpeers "$1" | grep -i -E "$leecher_re" | while IFS= read -r leecher; do
+  tr_tpeers "$1" | while IFS= read -r leecher; do
     # https://en.wikipedia.org/wiki/PeerGuardian#P2P_plaintext_format
     ip=$(echo "$leecher" | awk '{ print $1 }')
     grep -qs "$(echo "$ip" | sed 's/\./\\./g')" "$LEECHER_LIST" && {
       # libTorrent (Rakshasa) lingers like a ghost; simply restarting doesn't work
-      error "[$hash_short] '$ip': already exists in blocklist, skipping"
+      error "[$hash_short] '$ip': already in blocklist, skipping"
       continue
     }
-    # Remove ':'s in the first field
-    client=$(echo "$leecher" | sed -E 's/^([^ ]+ +){5}//' | tr ':' '_')
+    client=$(echo "$leecher" | sed -E 's/^([^ ]+ +){5}//')
+    echo "$client" | grep -qs "$LEECHER_RE" || continue
+    error "[$hash_short] blocking $client: $ip"
     # Support IPv6 blocklist starting from v4.0.0
     # https://github.com/transmission/transmission/releases/tag/4.0.0
     ! is_ipv4 "$ip" && [ "$(echo "$TR_VERSION" | cut -c -1)" -lt 4 ] && {
-      error "[$hash_short] '$ip':"
       error "[$hash_short] v$TR_VERSION doesn't support IPv6 blocklist"
       error "[$hash_short] at least v4.0.0 is required, skipping"
       continue
     }
-    error "[$hash_short] blocking $client: $ip"
+    # Remove ':'s in the first field
+    client=$(echo "$client" | tr ':' '_')
     echo "$client:$ip-$ip" | tee -a "$LEECHER_LIST"
   done
 }
