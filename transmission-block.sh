@@ -12,6 +12,7 @@
 [ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS='-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa),libtorrent (Rasterbar),QQDownload,Thunder,Xfplay,Xunlei'
 [ -z "$WORK_DIR" ] && WORK_DIR=./transmission-block
 # [ -z "$EXTERNAL_BL" ] && EXTERNAL_BL=
+[ -z "$CHECK_INTERVAL" ] && CHECK_INTERVAL=30
 [ -z "$CLEAR_INTERVAL" ] && CLEAR_INTERVAL=7d
 [ -z "$RESTART_TORRENT" ] && RESTART_TORRENT=true
 [ -z "$RENEW_INTERVAL" ] && RENEW_INTERVAL=1d
@@ -22,42 +23,51 @@ Usage: $0 [OPTION]...
 
 Block leecher clients and bad IPs for Transmission.
 
-The script maintains a blocklist for unwanted clients, merges it with online
-blocklists if provided, and sets up an HTTP service, so that Transmission can
-access it via "blocklist-url".
+The script maintains a blocklist for unwanted clients and/or external
+blocklists, and sets up an HTTP service, so that Transmission can access it via
+"blocklist-url".
 
 Set the TR_AUTH environment variable to username:password before using.
 
 Examples:
-  # block IPs of default clients, see --block-client
+  # block bad peers using default leecher clients, see --block
   $(basename "$0")
 
-  # block default clients and IPs in external blocklist
-  $(basename "$0") --external-bl https://www.example.com/blocklist
+  # block bad clients and the IPs in the external blocklist
+  $(basename "$0") --external-blocklist https://www.example.com/blocklist
+
+  # don't block bad clients but the IPs in several blocklists
+  $(basename "$0") -b '' \\
+  -e https://www.example.com/blocklist \\
+  -e https://www.example.com/blocklist.gzip
 
 Options:
-  -s, --tr-server <host:port>
-                      connect to Transmission at <host:port>
+  -t, --tr-server <url>
+                      connect to the Transmission session at <url>
                       (default: $TR_SERVER)
-  -c, --block-client <pattern>
-                      clients to block; <pattern> should be case-sensitive
+  -c, --check-interval <num>
+                      check the peers and/or external blocklists every this
+                      period of time in seconds; must be greater than 0
+                      (default: $CHECK_INTERVAL)
+  -b, --block <clients>
+                      clients to block; <clients> should be case-sensitive
                       regexes with BRE (POSIX) flavor separated by ','s; set to
                       '' to disable
 $(echo "(default: '$LEECHER_CLIENTS')" | fmt -w 52 -s | sed "s/^/$(printf '%22s' '')/")
-  -i, --clear-interval <num[suffix]>
-                      clear the local blocklist generated from --block-client
-                      every this period of time in seconds; setting to 0 means
-                      never; suffix may be 's' for seconds (the default), 'm'
-                      for minutes, 'h' for hours or 'd' for days (default: $CLEAR_INTERVAL)
-  -e, --external-bl <url>
+  -C, --clear-interval <num[suffix]>
+                      clear the local blocklist generated with --block every
+                      this period of time in seconds; setting to 0 means never;
+                      suffix may be 's' for seconds (the default), 'm' for
+                      minutes, 'h' for hours or 'd' for days (default: $CLEAR_INTERVAL)
+  -e, --external-blocklist <url>
                       external blocklist URL with the file format of
                       text/gzip/zip; can be used several times
-  -I, --renew-external-bl-interval <num[suffix]>
-                      external blocklists renew interval in seconds; for suffix
-                      see --clear-interval (default: $RENEW_INTERVAL)
-  -d, --work-dir <dir>
+  -r, --renew-interval <num[suffix]>
+                      interval of renewing external blocklists in seconds; for
+                      suffix see --clear-interval (default: $RENEW_INTERVAL)
+  -w, --work-dir <dir>
                       set working directory (default: $WORK_DIR)
-  -S, --bl-server <host:port>
+  -s, --blocklist-server <host:port>
                       set up blocklist HTTP service at <host:port>; one of
                       nginx/busybox httpd/python3 is required
                       (default: $BL_SERVER)
@@ -82,65 +92,57 @@ _exit() { error "$USAGE" && exit 2; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-  -s | --tr-server)
+  -t | --tr-server)
     [ -n "$2" ] || _exit
-    TR_SERVER="$(echo "$2" | xargs)"
-    shift 2
+    TR_SERVER="$2" && shift 2
     ;;
-  -c | --block-client)
+  -c | --check-interval)
     [ -n "$2" ] || _exit
-    LEECHER_CLIENTS="$2"
-    shift 2
+    CHECK_INTERVAL="$2" && shift 2
     ;;
-  -i | --clear-interval)
+  -b | --block)
     [ -n "$2" ] || _exit
-    CLEAR_INTERVAL="$(echo "$2" | xargs)"
-    shift 2
+    LEECHER_CLIENTS="$2" && shift 2
     ;;
-  -e | --external-bl)
+  -C | --clear-interval)
     [ -n "$2" ] || _exit
-    EXTERNAL_BL="$EXTERNAL_BL $2"
-    shift 2
+    CLEAR_INTERVAL="$2" && shift 2
     ;;
-  -I | --renew-external-bl-interval)
+  -e | --external-blocklist)
     [ -n "$2" ] || _exit
-    RENEW_INTERVAL="$(echo "$2" | xargs)"
-    shift 2
+    EXTERNAL_BL="$EXTERNAL_BL $2" && shift 2
     ;;
-  -d | --work-dir)
+  -r | --renew-interval)
     [ -n "$2" ] || _exit
-    WORK_DIR="$2"
-    shift 2
+    RENEW_INTERVAL="$2" && shift 2
     ;;
-  -S | --bl-server)
+  -w | --work-dir)
     [ -n "$2" ] || _exit
-    BL_SERVER="$(echo "$2" | xargs)"
-    shift 2
+    WORK_DIR="$2" && shift 2
     ;;
-  -n | --no-restart)
-    RESTART_TORRENT=false
-    shift
+  -s | --blocklist-server)
+    [ -n "$2" ] || _exit
+    BL_SERVER="$2" && shift 2
     ;;
-  -h | --help)
-    error "$USAGE" && exit
-    ;;
-  *)
-    _exit
-    ;;
+  -n | --no-restart) RESTART_TORRENT=false && shift ;;
+  -h | --help) error "$USAGE" && exit ;;
+  *) _exit ;;
   esac
 done
 
 [ -z "$TR_AUTH" ] && error "the TR_AUTH environment variable is not set" && exit 1
 exist transmission-remote || { error "transmission-remote: command not found" && exit 127; }
 # <host:port> is not necessary; allow reverse proxy
-# echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid transmission server: '$TR_SERVER'" && _exit; }
-echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "invalid blocklist server: '$BL_SERVER'" && _exit; }
-[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify --block-client and/or --external-bl" && _exit
+# echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$TR_SERVER: invalid transmission server" && _exit; }
+[ -z "$TR_SERVER" ] && error "$TR_SERVER: no Transmission server specified" && _exit
+echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$BL_SERVER: invalid blocklist server" && _exit; }
+[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify --block and/or --external-blocklist" && _exit
 EXTERNAL_BL=$(echo "$EXTERNAL_BL" | xargs | tr ' ' '\n' | sort -u | xargs)
-echo "$CLEAR_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "invalid clear interval: '$CLEAR_INTERVAL'" && _exit; }
-echo "$RENEW_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "invalid renew interval: '$RENEW_INTERVAL'" && _exit; }
+{ echo "$CHECK_INTERVAL" | grep -qs -E '^[0-9]+$' && [ "$CHECK_INTERVAL" -ge 0 ]; } || { error "$CHECK_INTERVAL: invalid check interval" && _exit; }
+echo "$CLEAR_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "$CLEAR_INTERVAL: invalid clear interval" && _exit; }
+echo "$RENEW_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "$RENEW_INTERVAL: invalid renew interval" && _exit; }
 mkdir -p "$WORK_DIR" || exit 1
-{ [ -r "$WORK_DIR" ] && [ -w "$WORK_DIR" ]; } || { error "'$WORK_DIR': permission denied" && exit 1; }
+{ [ -r "$WORK_DIR" ] && [ -w "$WORK_DIR" ]; } || { error "$WORK_DIR: permission denied" && exit 1; }
 
 to_seconds() {
   case "$1" in
@@ -280,7 +282,7 @@ update_leechers() (
         fi
       }
     done
-    sleep 30
+    sleep "$CHECK_INTERVAL"
   done
 )
 
@@ -295,6 +297,7 @@ update_leechers() (
 EXTERNAL_DIR="$WORK_DIR/external"
 [ -n "$EXTERNAL_BL" ] && {
   mkdir -p "$EXTERNAL_DIR" || exit 1
+  exist curl || { error "curl: command not found" exit 127; }
   exist file || { error "file: command not found" exit 127; }
 }
 

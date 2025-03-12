@@ -8,7 +8,7 @@ Wants=network-online.target
 DynamicUser=yes
 EnvironmentFile=/usr/local/etc/transmission-block/transmission-block.conf
 StateDirectory=%p
-ExecStart=/usr/local/bin/transmission-block -d "$STATE_DIRECTORY"
+ExecStart=/usr/local/bin/transmission-block -w "$STATE_DIRECTORY"
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
