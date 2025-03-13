@@ -9,7 +9,6 @@ DynamicUser=yes
 EnvironmentFile=/usr/local/etc/transmission-block/transmission-block.conf
 StateDirectory=%p
 ExecStart=/usr/local/bin/transmission-block -w "$STATE_DIRECTORY"
-ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target

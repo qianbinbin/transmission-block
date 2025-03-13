@@ -23,9 +23,9 @@ Usage: $0 [OPTION]...
 
 Block leecher clients and bad IPs for Transmission.
 
-The script maintains a blocklist for unwanted clients and/or external
-blocklists, and sets up an HTTP service, so that Transmission can access it via
-"blocklist-url".
+The script maintains a blocklist for IPs of unwanted clients and/or IPs in
+external blocklists, and sets up an HTTP service for Transmission to access it
+via "blocklist-url".
 
 Set the TR_AUTH environment variable to username:password before using.
 
@@ -83,6 +83,7 @@ END
 )
 
 error() { echo "$@" >&2; }
+_error() { printf "%s" "$@" >&2; }
 exist() { command -v "$1" >/dev/null 2>&1; }
 _exit() { error "$USAGE" && exit 2; }
 
@@ -130,13 +131,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -z "$TR_AUTH" ] && error "the TR_AUTH environment variable is not set" && exit 1
+[ -z "$TR_AUTH" ] && error "The TR_AUTH environment variable is not set" && exit 1
 exist transmission-remote || { error "transmission-remote: command not found" && exit 127; }
 # <host:port> is not necessary; allow reverse proxy
 # echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$TR_SERVER: invalid transmission server" && _exit; }
 [ -z "$TR_SERVER" ] && error "$TR_SERVER: no Transmission server specified" && _exit
 echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$BL_SERVER: invalid blocklist server" && _exit; }
-[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "please specify --block and/or --external-blocklist" && _exit
+[ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "Please specify --block and/or --external-blocklist" && _exit
 EXTERNAL_BL=$(echo "$EXTERNAL_BL" | xargs | tr ' ' '\n' | sort -u | xargs)
 { echo "$CHECK_INTERVAL" | grep -qs -E '^[0-9]+$' && [ "$CHECK_INTERVAL" -ge 0 ]; } || { error "$CHECK_INTERVAL: invalid check interval" && _exit; }
 echo "$CLEAR_INTERVAL" | grep -qs -E '^[0-9]+[smhd]?$' || { error "$CLEAR_INTERVAL: invalid clear interval" && _exit; }
@@ -161,20 +162,6 @@ RENEW_INTERVAL=$(to_seconds "$RENEW_INTERVAL")
 # PARSE ARGS
 # ------------------------------------------------------------------------------
 
-error() { echo "$@" | sed 's/^/[main] /g' >&2; }
-proc_alive() { kill -0 "$1" 2>/dev/null; }
-request_reload() { kill -s HUP $$; }
-acquire_file() {
-  for attempt in $(seq 20); do
-    [ -d "$1.lock" ] && error "attempt $attempt: waiting for '$1'" && sleep 5 && continue
-    mkdir "$1.lock" && return 0
-    error "could not create lock file for '$1'" && return 2
-  done
-  error "timeout when waiting for '$1'"
-  return 1
-}
-release_file() { rmdir "$1.lock"; }
-
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # LEECHER LIST
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -182,11 +169,12 @@ release_file() { rmdir "$1.lock"; }
 LEECHER_LIST="$WORK_DIR/leechers.p2p"
 
 tr_remote() { transmission-remote "$TR_SERVER" --authenv "$@"; }
+_error "Connecting to $TR_SERVER... "
 TR_VERSION=$(tr_remote --session-info | sed -n -E 's/.*Daemon version: ([^ ]*).*/\1/p')
+[ -z "$TR_VERSION" ] && error "Could not connect" && exit 1
+error "v$TR_VERSION"
 TR_MAJOR_V=$(echo "$TR_VERSION" | awk -F '.' '{ print $1 }')
 TR_MINOR_V=$(echo "$TR_VERSION" | awk -F '.' '{ print $2 }')
-[ -z "$TR_VERSION" ] && error "could not connect to $TR_SERVER" && exit 1
-error "connected to $TR_SERVER, v$TR_VERSION"
 # '--torrent active' is not really active
 tr_hashes() { tr_remote --torrent all --info | grep Hash: | awk '{ print $2 }'; }
 tr_update_bl() {
@@ -195,7 +183,6 @@ tr_update_bl() {
   fi
   error "$res" && return 1
 }
-
 # Address Flags Done Down Up Client
 tr_tpeers() { tr_remote --torrent "$1" --info-peers | tail -n +2; }
 tr_tstart() { tr_remote --torrent "$1" --start | grep -qs success; }
@@ -204,22 +191,23 @@ tr_tstopped() { tr_remote --torrent "$1" --info | grep -qs 'State: Stopped'; }
 # Only apply to active torrents, not working for finished/will verify/verifying
 tr_trestart() {
   hash_short="$(echo "$1" | cut -c -8)"
-  error "[$hash_short] restarting"
+  _error "[$hash_short] Stopping... "
   tr_retry=$(seq 10)
   for _ in $tr_retry; do
     tr_tstop "$1"
     tr_tstopped "$1" && break
     sleep 1
   done
-  tr_tstopped "$1" || { error "[$hash_short] could not stop" && return 1; }
-  sleep 5 # transmission tends to keep the connection
-  error "[$hash_short] stopped, starting"
+  tr_tstopped "$1" || { error "Could not stop" && return 1; }
+  error 'Done'
+  sleep 3 # Transmission tends to keep the connection
+  _error "[$hash_short] Starting... "
   for _ in $tr_retry; do
     tr_tstart "$1"
-    tr_tstopped "$1" || { error "[$hash_short] started" && return 0; }
+    tr_tstopped "$1" || { error "Done" && return 0; }
     sleep 1
   done
-  error "[$hash_short] could not start, you may have to restart manually"
+  error "Could not start, you may need to restart manually"
   return 1
 }
 
@@ -232,12 +220,12 @@ tr_tblock() {
     ip=$(echo "$leecher" | awk '{ print $1 }')
     grep -qs "$(echo "$ip" | sed 's/\./\\./g')" "$LEECHER_LIST" && {
       # libTorrent (Rakshasa) lingers like a ghost; simply restarting doesn't work
-      error "[$hash_short] '$ip': already in blocklist, skipping"
+      error "[$hash_short] $ip: already in blocklist, skipping"
       continue
     }
     client=$(echo "$leecher" | sed -E 's/^([^ ]+ +){5}//')
     echo "$client" | grep -qs "$LEECHER_RE" || continue
-    error "[$hash_short] blocking $client: $ip"
+    error "[$hash_short] Blocking $client: $ip"
     # Support IPv6 blocklist starting from v4.0.0
     # https://github.com/transmission/transmission/releases/tag/4.0.0
     ! is_ipv4 "$ip" && [ "$TR_MAJOR_V" -lt 4 ] && {
@@ -251,41 +239,6 @@ tr_tblock() {
   done
 }
 
-update_leechers() (
-  error() { echo "$@" | sed 's/^/[leecher] /g' >&2; }
-  start=$(date +%s)
-  while true; do
-    diff=$(($(date +%s) - start))
-    [ "$CLEAR_INTERVAL" -ne 0 ] && [ $diff -ge "$CLEAR_INTERVAL" ] && {
-      error "clearing leecher blocklist"
-      acquire_file "$LEECHER_LIST" && {
-        : >"$LEECHER_LIST"
-        release_file "$LEECHER_LIST"
-      }
-      request_reload
-      start=$(date +%s)
-    }
-    for hash in $(tr_hashes); do
-      rl=1
-      acquire_file "$LEECHER_LIST" && {
-        [ -n "$(tr_tblock "$hash")" ] && rl=0
-        release_file "$LEECHER_LIST"
-      }
-      [ $rl -eq 0 ] && {
-        request_reload
-        if [ "$RESTART_TORRENT" = true ]; then
-          if [ "$TR_MAJOR_V" -lt 4 ] || { [ "$TR_MAJOR_V" -eq 4 ] && [ "$TR_MINOR_V" -lt 1 ]; }; then
-            # Let's hope reloading complete before restarting
-            sleep 3
-            tr_trestart "$hash"
-          fi
-        fi
-      }
-    done
-    sleep "$CHECK_INTERVAL"
-  done
-)
-
 # ------------------------------------------------------------------------------
 # LEECHER LIST
 # ------------------------------------------------------------------------------
@@ -294,7 +247,7 @@ update_leechers() (
 # EXTERNAL LIST
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-EXTERNAL_DIR="$WORK_DIR/external"
+EXTERNAL_DIR="$WORK_DIR/extern"
 [ -n "$EXTERNAL_BL" ] && {
   mkdir -p "$EXTERNAL_DIR" || exit 1
   exist curl || { error "curl: command not found" exit 127; }
@@ -310,73 +263,70 @@ elif exist md5sum; then
 elif exist openssl; then
   do_md5() { openssl md5 | awk '{ print $2 }'; }
 else
-  error "no md5 tool found" && exit 127
+  error "No md5 tool found" && exit 127
 fi
+
+hr_size() {
+  wc -c "$1" | awk '{
+    split("B KiB MiB", units, " ")
+    size = $1
+    for (i=1; size>=1024 && i<3; i++) size /= 1024
+    printf "%.1f %s\n", size, units[i]
+  }'
+}
 
 URL_HASHES=
 for u in $EXTERNAL_BL; do URL_HASHES="$URL_HASHES $(printf '%s' "$u" | do_md5)"; done
 URL_HASHES=$(echo "$URL_HASHES" | xargs | tr ' ' '\n')
 cleanup_extern_dir() {
   ls "$EXTERNAL_DIR"/* >/dev/null 2>&1 || return 0
-  _ret=1
+  ret_clean_extern=0
   for _f in "$EXTERNAL_DIR"/*; do
     fprefix=$(basename "$_f") && fprefix=${fprefix%.*}
     echo "$URL_HASHES" | grep -qs "^$fprefix$" && continue
-    error "deleting '$_f'" && rm "$_f"
-    _ret=0
+    _error "Deleting '$_f'... "
+    if rm "$_f"; then error "Done"; else ret_clean_extern=0; fi
   done
-  return $_ret
+  return $ret_clean_extern
 }
 
 xcat() {
-  __ret=0
+  ret_xcat=0
   for __f in "$@"; do
     case "$(file -b "$__f")" in
-    gzip*) gzip -cd "$__f" || __ret=1 ;;
-    Zip*) unzip -p "$__f" || __ret=1 ;; # 7z e -so "$__f"
-    *text*) cat "$__f" || __ret=1 ;;
-    *) error "'$__f': unknown file" && __ret=1 ;;
+    gzip*) gzip -cd "$__f" || ret_xcat=1 ;;
+    Zip*) unzip -p "$__f" || ret_xcat=1 ;; # 7z e -so "$__f"
+    *text*) cat "$__f" || ret_xcat=1 ;;
+    *) error "$__f: unknown file" && ret_xcat=1 ;;
     esac
   done
-  return $__ret
+  return $ret_xcat
 }
 
-update_external_lists() (
-  error() { echo "$@" | sed 's/^/[external] /g' >&2; }
-  while true; do
-    rl=1
-    acquire_file "$EXTERNAL_DIR" && {
-      for url in $EXTERNAL_BL; do
-        error "updating '$url'"
-        url_hash=$(printf '%s' "$url" | do_md5)
-        etag=$(_curl --head "$url" | grep -i '^etag: ' | cut -c 7-)
-        grep -qs "^$etag$" "$EXTERNAL_DIR/$url_hash.etag" && {
-          error "no need to update '$url'"
-          continue
-        }
-        error "downloading '$url'"
-        _curl --compressed -o "$EXTERNAL_DIR/$url_hash.tmp" "$url" || {
-          error "unable to download '$url', skipping"
-          rm -f "$EXTERNAL_DIR/$url_hash.tmp"
-          continue
-        }
-        xcat "$EXTERNAL_DIR/$url_hash.tmp" >/dev/null || {
-          error "unknown file from '$url', skipping"
-          rm -f "$EXTERNAL_DIR/$url_hash"*
-          continue
-        }
-        mv "$EXTERNAL_DIR/$url_hash.tmp" "$EXTERNAL_DIR/$url_hash.data"
-        echo "$etag" >"$EXTERNAL_DIR/$url_hash.etag"
-        error "updated"
-        rl=0
-      done
-      cleanup_extern_dir && rl=0
-      release_file "$EXTERNAL_DIR"
+renew_external_lists() {
+  ret_renew=1
+  for url in $EXTERNAL_BL; do
+    _error "Updating $url... "
+    url_hash=$(printf '%s' "$url" | do_md5)
+    etag=$(_curl --head "$url" | grep -i '^etag: ' | cut -c 7-)
+    grep -qs "^$etag$" "$EXTERNAL_DIR/$url_hash.etag" && error "Already up to date" && continue
+    _curl --compressed -o "$EXTERNAL_DIR/$url_hash.tmp" "$url" || {
+      error "Could not download, skipping"
+      rm -f "$EXTERNAL_DIR/$url_hash.tmp"
+      continue
     }
-    [ $rl -eq 0 ] && request_reload
-    sleep "$RENEW_INTERVAL"
+    xcat "$EXTERNAL_DIR/$url_hash.tmp" >/dev/null || {
+      error "Skipping unknown file"
+      rm -f "$EXTERNAL_DIR/$url_hash"*
+      continue
+    }
+    mv "$EXTERNAL_DIR/$url_hash.tmp" "$EXTERNAL_DIR/$url_hash.data" &&
+      echo "$etag" >"$EXTERNAL_DIR/$url_hash.etag" && error "Done"
+    error "Fetched $(hr_size "$EXTERNAL_DIR/$url_hash.data")"
+    ret_renew=0
   done
-)
+  return $ret_renew
+}
 
 # ------------------------------------------------------------------------------
 # EXTERNAL LIST
@@ -408,129 +358,110 @@ http {
 END
 )
 
-run_web_server() (
-  error() { echo "$@" | sed 's/^/[server] /g' >&2; }
+start_web_server() {
+  error "Starting web server, not recommended for public network"
   if [ -n "$NGINX" ]; then
-    error "using nginx"
+    _error "Starting nginx... "
     echo "$NGINX_CONF" >"$WORK_DIR/nginx.conf"
-    $NGINX -c "$(realpath "$WORK_DIR/nginx.conf")" -e stderr -g 'daemon off;'
+    $NGINX -c "$(realpath "$WORK_DIR/nginx.conf")" -e stderr -g 'daemon off;' &
+    WEBSERVER_PID=$! && proc_alive "$WEBSERVER_PID" && error "Done"
   elif busybox --list 2>/dev/null | grep -qs '^httpd$'; then
-    error "using busybox httpd"
-    busybox httpd -f -p "$BL_SERVER" -h "$WEB_DIR"
+    _error "Starting busybox httpd... "
+    busybox httpd -f -p "$BL_SERVER" -h "$WEB_DIR" &
+    WEBSERVER_PID=$! && proc_alive "$WEBSERVER_PID" && error "Done"
   elif exist python3; then
-    error "using python3"
-    py_minor_v=$(python3 -V | sed -n -E 's/^Python 3\.([0-9]+)\.[0-9]+/\1/p')
-    if [ "$py_minor_v" -ge 7 ]; then
-      python3 -m http.server -b "${BL_SERVER%:*}" -d "$WEB_DIR" "${BL_SERVER#*:}" 2>/dev/null
+    _error "Starting python3 http.server... "
+    py_ver=$(python3 -V | awk '{ printf $2 }')
+    if [ "$(echo "$py_ver" | awk -F '.' '{ print $2 }')" -ge 7 ]; then
+      python3 -m http.server -b "${BL_SERVER%:*}" -d "$WEB_DIR" "${BL_SERVER#*:}" 2>/dev/null &
+      WEBSERVER_PID=$! && proc_alive "$WEBSERVER_PID" && error "Done"
     else
-      error "require Python >= 3.7, but got $(python3 -V | awk '{ printf $2 }')"
+      error "Python>=3.7 is required, but got $py_ver"
+      return 1
     fi
   else
-    error "no web server program found"
+    error "No web server program found"
+    return 127
   fi
-  error "exiting unexpectedly"
-  kill $$
-)
+}
 
+stop_web_server() {
+  _error "Stopping web server... "
+  if proc_alive "$WEBSERVER_PID"; then
+    kill "$WEBSERVER_PID" && error "Done"
+  else
+    error "Web server is not running" && return 1
+  fi
+}
 # ------------------------------------------------------------------------------
 # WEB SERVER
 # ------------------------------------------------------------------------------
 
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# MAIN PROCESS
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-# Call this before starting background processes
-cleanup_pre() {
-  # Add the suffix '/' in case that $WORK_DIR is a symlink
-  find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.pid' -or -name '*.tmp' \) -delete
-  find "$WORK_DIR/" -type d -name '*.lock' -delete
-}
+proc_alive() { kill -0 "$1" 2>/dev/null; }
 
 cleanup() {
+  # Add the suffix '/' in case that $WORK_DIR is a symlink
+  find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.tmp' \) -delete
   [ -z "$LEECHER_CLIENTS" ] && rm -f "$LEECHER_LIST"
-  if [ -z "$EXTERNAL_BL" ]; then
-    rm -rf "$EXTERNAL_DIR"
-  else
-    acquire_file "$EXTERNAL_DIR" && {
-      cleanup_extern_dir
-      release_file "$EXTERNAL_DIR"
-    }
-  fi
+  if [ -z "$EXTERNAL_BL" ]; then rm -rf "$EXTERNAL_DIR"; else cleanup_extern_dir; fi
 }
 
 reload() {
-  error "reloading"
+  _error "Generating blocklist... "
   : >"$WEB_DIR/blocklist.p2p"
-  [ -n "$LEECHER_CLIENTS" ] && {
-    acquire_file "$LEECHER_LIST" && {
-      [ -f "$LEECHER_LIST" ] && cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p"
-      release_file "$LEECHER_LIST"
-    }
-  }
-  [ -n "$EXTERNAL_BL" ] && {
-    acquire_file "$EXTERNAL_DIR" && {
-      ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 && xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p"
-      release_file "$EXTERNAL_DIR"
-    }
-  }
+  [ -n "$LEECHER_CLIENTS" ] && [ -f "$LEECHER_LIST" ] &&
+    cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p"
+  [ -n "$EXTERNAL_BL" ] && ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 &&
+    xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p"
   gzip -f "$WEB_DIR/blocklist.p2p" || return 1
-  error "blocklist URL: 'http://$BL_SERVER/blocklist.p2p.gz'"
-  error "requesting Transmission to update the blocklist"
-  tr_update_bl || return 1
-  error "reloaded"
+  error "http://$BL_SERVER/blocklist.p2p.gz"
+  _error "Requesting Transmission to update the blocklist... " && tr_update_bl && error "Done"
+  return 1
 }
 
 stop() {
-  error "stopping"
+  ret_stop=0
   # exist pstree && pstree -p $$
-  tty -s && {
-    for pid in $LEECHER_PID $EXTERNAL_PID $WEBSERVER_PID; do
-      kill -0 "-$pid" 2>/dev/null && kill -- "-$pid"
-    done
-  }
-  cleanup
-  error "stopped"
-  exit 0
+  stop_web_server || ret_stop=1
+  cleanup || ret_stop=1
+  exit $ret_stop
 }
 
-trap reload HUP
+# trap reload HUP
 trap stop INT TERM
 
-cleanup_pre
 cleanup
-
-[ -n "$LEECHER_CLIENTS" ] && {
-  # Put all child processes in a separate group, so that we can kill them all in
-  # the main process; we don't use kill -- -$$ because it may kill itself before
-  # killing the whole tree
-  tty -s && set -m
-  update_leechers &
-  tty -s && set +m
-  # PID is also the GPID
-  LEECHER_PID=$!
-}
-[ -n "$EXTERNAL_BL" ] && {
-  tty -s && set -m
-  update_external_lists &
-  tty -s && set +m
-  EXTERNAL_PID=$!
-}
-tty -s && set -m
-run_web_server &
-tty -s && set +m
-WEBSERVER_PID=$!
-
+start_web_server || exit 1
 reload
 
-# wait can be interrupted by signals so we put it in while loop
-while ! { [ -n "$LEECHER_CLIENTS" ] && ! proc_alive "$LEECHER_PID"; } &&
-  ! { [ -n "$EXTERNAL_BL" ] && ! proc_alive "$EXTERNAL_PID"; } &&
-  proc_alive "$WEBSERVER_PID"; do
-  wait
+[ -n "$LEECHER_CLIENTS" ] && leech_start=$(date +%s)
+[ -n "$EXTERNAL_BL" ] && extern_start=$((leech_start - RENEW_INTERVAL)) # ensure an update when starting
+while proc_alive "$WEBSERVER_PID"; do                                   # curl -sS --head "$BL_SERVER" >/dev/null
+  [ -n "$LEECHER_CLIENTS" ] && {
+    [ "$CLEAR_INTERVAL" -ne 0 ] && [ $(($(date +%s) - leech_start)) -ge "$CLEAR_INTERVAL" ] && {
+      _error "Clearing leecher blocklist... " && rm -f "$LEECHER_LIST" && error "Done"
+      reload
+      leech_start=$(date +%s)
+    }
+    for hash in $(tr_hashes); do
+      [ -n "$(tr_tblock "$hash")" ] && {
+        reload
+        [ "$RESTART_TORRENT" != true ] && continue
+        [ "$TR_MAJOR_V" -gt 4 ] && continue
+        { [ "$TR_MAJOR_V" -eq 4 ] && [ "$TR_MINOR_V" -ge 1 ]; } && continue
+        # Let's hope reloading complete before restarting
+        sleep 3
+        tr_trestart "$hash"
+      }
+    done
+  }
+  [ -n "$EXTERNAL_BL" ] && {
+    [ $(($(date +%s) - extern_start)) -ge "$RENEW_INTERVAL" ] && {
+      renew_external_lists && reload
+      extern_start=$(date +%s)
+    }
+  }
+  sleep "$CHECK_INTERVAL"
 done
-stop
 
-# ------------------------------------------------------------------------------
-# MAIN PROCESS
-# ------------------------------------------------------------------------------
+error "Web server stopped unexpectedly, exiting" && exit 1
