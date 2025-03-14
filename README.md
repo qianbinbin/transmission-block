@@ -89,7 +89,8 @@ export TR_AUTH=username:password # 用户名和密码，可以加入到环境变
 
 其中屏蔽客户端和在线黑名单，两者至少需要选择一种。
 
-要屏蔽的客户端是由 `LEECHER_CLIENTS` 指定的，使用区分大小写的 BRE（POSIX 基本正则表达式）匹配。
+要屏蔽的客户端是由 `LEECHER_CLIENTS` 指定的，使用区分大小写的 BRE（POSIX 基本正则表达式）匹配，即
+`grep` 不加  `-i` 和 `-E` 的匹配方式。
 
 > \[!TIP]
 > 也欢迎在 issue 补充其他可疑客户端，通过
@@ -123,5 +124,6 @@ Transmission 会更新黑名单到[配置目录](https://github.com/transmission
 * [加入黑名单后不会立即生效](https://github.com/transmission/transmission/issues/732)，系
   Transmission bug，预计 v4.1.0 版本将修复这个问题。对于小于此版本，脚本尝试通过重启任务解决（见配置文件中的 `RESTART_TORRENT`），但偶尔会重启失败。
 * Transmission v4.0.0 以下不支持屏蔽 IPv6 地址。
-* 一些客户端被离线下载服务器使用，但不排除有正常用户使用，例如 `libTorrent (Rakshasa)` 可能是迅雷或 PikPak 服务器，脚本默认屏蔽。
+* 一些客户端被离线下载服务器使用，但不排除有正常用户使用。例如 `libTorrent (Rakshasa) 0.13.8` 可能是 PikPak 服务器，
+  `libtorrent (Rasterbar) 2.0.7` 可能是迅雷服务器，脚本默认屏蔽。
 * 一些数据中心 IP 会被激进的在线黑名单拉黑，如 Vultr。

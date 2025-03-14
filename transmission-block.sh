@@ -9,7 +9,7 @@
 [ -z "$TR_SERVER" ] && TR_SERVER="127.0.0.1:9091"
 [ -z "$BL_SERVER" ] && BL_SERVER="127.0.0.1:9098"
 # https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc
-[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS='-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa),libtorrent (Rasterbar),QQDownload,Thunder,Xfplay,Xunlei'
+[ -z "$LEECHER_CLIENTS" ] && LEECHER_CLIENTS='-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa) 0\.13\.8,libtorrent (Rasterbar) 2\.0\.7,QQDownload,Thunder,Xfplay,Xunlei'
 [ -z "$WORK_DIR" ] && WORK_DIR=./transmission-block
 # [ -z "$EXTERNAL_BL" ] && EXTERNAL_BL=
 [ -z "$CHECK_INTERVAL" ] && CHECK_INTERVAL=30
@@ -86,6 +86,7 @@ error() { echo "$@" >&2; }
 _error() { printf "%s" "$@" >&2; }
 exist() { command -v "$1" >/dev/null 2>&1; }
 _exit() { error "$USAGE" && exit 2; }
+proc_alive() { kill -0 "$1" 2>/dev/null; }
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # PARSE ARGS
@@ -396,8 +397,6 @@ stop_web_server() {
 # ------------------------------------------------------------------------------
 # WEB SERVER
 # ------------------------------------------------------------------------------
-
-proc_alive() { kill -0 "$1" 2>/dev/null; }
 
 cleanup() {
   # Add the suffix '/' in case that $WORK_DIR is a symlink
