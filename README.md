@@ -31,6 +31,19 @@ rm /etc/systemd/system/transmission-block.service
 systemctl daemon-reload
 ```
 
+删除[配置目录](https://github.com/transmission/transmission/blob/main/docs/Configuration-Files.md)下的旧黑名单：
+
+```sh
+rm -i /path/to/config/blocklists/leechers.txt*
+```
+
+> \[!TIP]
+> 如果不知道配置目录，可以使用以下命令获取（替换自己的用户名和密码）：
+>
+> ```sh
+> transmission-remote --auth username:password --session-info | grep -o 'Configuration directory.\*' | awk '{ print $3 }'
+> ```
+
 ### 修改 Transmission 配置
 
 在 Transmission [配置文件](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md)中：
@@ -85,18 +98,22 @@ export TR_AUTH=username:password # 用户名和密码，可以加入到环境变
 
 ## 原理
 
-脚本维护一个黑名单，匹配指定客户端并将其 IP 加入（可选），与在线黑名单合并（可选），在本地建立 HTTP 服务，提供给 Transmission 访问。
+脚本主要做以下几件事：
 
-其中屏蔽客户端和在线黑名单，两者至少需要选择一种。
+1. 匹配指定客户端，并将其 IP 加入客户端黑名单（可选）。
+2. 下载在线黑名单（可选）。
+3. 将两种黑名单合并，在本地建立 HTTP 服务，提供给 Transmission 访问。
+
+其中客户端黑名单和在线黑名单，两者至少需要选择一种。
 
 要屏蔽的客户端是由 `LEECHER_CLIENTS` 指定的，使用区分大小写的 BRE（POSIX 基本正则表达式）匹配，即
 `grep` 不加  `-i` 和 `-E` 的匹配方式。
 
 > \[!TIP]
-> 也欢迎在 issue 补充其他可疑客户端，通过
+> 也欢迎在 [issue](https://github.com/qianbinbin/transmission-block/issues/9) 补充其他可疑客户端，通过
 > `transmission-remote --auth username:password --torrent all --peer-info` 查看所有连接。
 
-考虑到普通用户的 IP 动态分配，默认每 7 天清空一次；在线黑名单默认每 1 天检查更新一次。这些都是可定制项。
+考虑到普通用户的 IP 动态分配，客户端黑名单默认每 7 天清空一次；在线黑名单默认每 1 天检查更新一次。这些都是可定制项。
 
 systemd 方式默认工作目录为 `/var/lib/transmission-block/`（请勿手动创建），结构示例如下：
 
