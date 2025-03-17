@@ -41,7 +41,7 @@ rm -i /path/to/config/blocklists/leechers.txt*
 > 如果不知道配置目录，可以使用以下命令获取（替换自己的用户名和密码）：
 >
 > ```sh
-> transmission-remote --auth username:password --session-info | grep -o 'Configuration directory.\*' | awk '{ print $3 }'
+> transmission-remote --auth username:password --session-info | sed -n -E 's/.*Configuration directory: (.*)/\1/p'
 > ```
 
 ### 修改 Transmission 配置
@@ -141,6 +141,6 @@ Transmission 会更新黑名单到[配置目录](https://github.com/transmission
 * [加入黑名单后不会立即生效](https://github.com/transmission/transmission/issues/732)，系
   Transmission bug，预计 v4.1.0 版本将修复这个问题。对于小于此版本，脚本尝试通过重启任务解决（见配置文件中的 `RESTART_TORRENT`），但偶尔会重启失败。
 * Transmission v4.0.0 以下不支持屏蔽 IPv6 地址。
-* 一些客户端被离线下载服务器使用，但不排除有正常用户使用。例如 `libTorrent (Rakshasa) 0.13.8` 可能是 PikPak 服务器，
-  `libtorrent (Rasterbar) 2.0.7` 可能是迅雷服务器，脚本默认屏蔽。
+* 一些客户端被离线下载服务器使用，但不排除有正常用户使用。例如
+  `libtorrent (Rasterbar) 2.0.7`、`libTorrent (Rakshasa) 0.13.8` 可能是迅雷或 PikPak 服务器，脚本默认屏蔽。
 * 一些数据中心 IP 会被激进的在线黑名单拉黑，如 Vultr。
