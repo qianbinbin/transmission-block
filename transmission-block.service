@@ -1,8 +1,8 @@
 [Unit]
 Description=Block Leecher Clients and Bad IPs for Transmission
 Documentation=https://github.com/qianbinbin/transmission-block
-After=network-online.target
-Wants=network-online.target
+After=network-online.target transmission-daemon.service
+Wants=network-online.target transmission-daemon.service
 
 [Service]
 DynamicUser=yes
