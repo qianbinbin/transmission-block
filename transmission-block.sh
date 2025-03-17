@@ -193,7 +193,7 @@ tr_tstopped() { tr_remote --torrent "$1" --info | grep -qs 'State: Stopped'; }
 tr_trestart() {
   hash_short="$(echo "$1" | cut -c -8)"
   _error "[$hash_short] Stopping... "
-  tr_retry=$(seq 10)
+  tr_retry=$(seq 5)
   for _ in $tr_retry; do
     tr_tstop "$1"
     tr_tstopped "$1" && break
@@ -408,14 +408,16 @@ cleanup() {
 reload() {
   _error "Generating blocklist... "
   : >"$WEB_DIR/blocklist.p2p"
-  [ -n "$LEECHER_CLIENTS" ] && [ -f "$LEECHER_LIST" ] &&
-    cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p"
+  [ -n "$LEECHER_CLIENTS" ] && [ -f "$LEECHER_LIST" ] && {
+    cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p" || return 1
+  }
   [ -n "$EXTERNAL_BL" ] && ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 &&
-    xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p"
+    xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p" # continue even error happened
   gzip -f "$WEB_DIR/blocklist.p2p" || return 1
   error "http://$BL_SERVER/blocklist.p2p.gz"
-  _error "Requesting Transmission to update the blocklist... " && tr_update_bl && error "Done"
-  return 1
+  _error "Requesting Transmission to update the blocklist... "
+  tr_update_bl || return 1
+  error "Done"
 }
 
 stop() {
@@ -443,8 +445,7 @@ while proc_alive "$WEBSERVER_PID"; do                                   # curl -
       leech_start=$(date +%s)
     }
     for hash in $(tr_hashes); do
-      [ -n "$(tr_tblock "$hash")" ] && {
-        reload
+      [ -n "$(tr_tblock "$hash")" ] && reload && {
         [ "$RESTART_TORRENT" != true ] && continue
         [ "$TR_MAJOR_V" -gt 4 ] && continue
         { [ "$TR_MAJOR_V" -eq 4 ] && [ "$TR_MINOR_V" -ge 1 ]; } && continue
