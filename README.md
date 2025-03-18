@@ -144,3 +144,15 @@ Transmission 会更新黑名单到[配置目录](https://github.com/transmission
 * 一些客户端被离线下载服务器使用，但不排除有正常用户使用。例如
   `libtorrent (Rasterbar) 2.0.7`、`libTorrent (Rakshasa) 0.13.8` 可能是迅雷或 PikPak 服务器，脚本默认屏蔽。
 * 一些数据中心 IP 会被激进的在线黑名单拉黑，如 Vultr。
+* systemd 235 以下版本（通过 `systemctl --version` 查看）不支持 DynamicUser 和
+  StateDirectory，有条件建议升级。如果无法升级，需自行创建工作目录并修改 systemd 单元文件：
+  ```sh
+  mkdir /var/lib/transmission-block
+  chown nobody:nogroup /var/lib/transmission-block # nobody:nogroup 可改为自己想要的用户和用户组
+  sed -i -e 's/DynamicUser=yes/User=nobody/' \ # User= 要与上面的用户相同
+    -e '/StateDirectory=%p/d' \
+    -e 's,"$STATE_DIRECTORY",/var/lib/transmission-block,' \
+    /usr/local/lib/systemd/system/transmission-block.service
+  systemctl daemon-reload
+  ```
+  如果你不在乎安全问题，可以删除文件中 `DynamicUser=` 和 `User=` 的行，这将直接以 root 用户运行。
