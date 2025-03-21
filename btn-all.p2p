@@ -605,7 +605,6 @@ all@BTN-Collected-Rules:1.162.29.38-1.162.29.38
 all@BTN-Collected-Rules:14.153.174.151-14.153.174.151
 all@BTN-Collected-Rules:14.154.59.29-14.154.59.29
 all@BTN-Collected-Rules:14.212.176.136-14.212.176.136
-all@BTN-Collected-Rules:14.222.183.141-14.222.183.141
 all@BTN-Collected-Rules:27.10.80.108-27.10.80.108
 all@BTN-Collected-Rules:36.5.147.84-36.5.147.84
 all@BTN-Collected-Rules:36.26.153.26-36.26.153.26
@@ -630,6 +629,7 @@ all@BTN-Collected-Rules:60.163.201.209-60.163.201.209
 all@BTN-Collected-Rules:61.141.182.244-61.141.182.244
 all@BTN-Collected-Rules:62.76.24.252-62.76.24.252
 all@BTN-Collected-Rules:64.180.53.145-64.180.53.145
+all@BTN-Collected-Rules:76.245.207.54-76.245.207.54
 all@BTN-Collected-Rules:84.54.2.49-84.54.2.49
 all@BTN-Collected-Rules:84.54.2.52-84.54.2.52
 all@BTN-Collected-Rules:84.54.3.67-84.54.3.67
@@ -652,6 +652,7 @@ all@BTN-Collected-Rules:111.192.186.10-111.192.186.10
 all@BTN-Collected-Rules:111.242.96.29-111.242.96.29
 all@BTN-Collected-Rules:112.3.203.4-112.3.203.4
 all@BTN-Collected-Rules:112.3.226.109-112.3.226.109
+all@BTN-Collected-Rules:112.12.137.49-112.12.137.49
 all@BTN-Collected-Rules:112.187.237.115-112.187.237.115
 all@BTN-Collected-Rules:112.225.141.246-112.225.141.246
 all@BTN-Collected-Rules:112.244.236.52-112.244.236.52
@@ -663,6 +664,7 @@ all@BTN-Collected-Rules:114.32.5.22-114.32.5.22
 all@BTN-Collected-Rules:114.232.180.252-114.232.180.252
 all@BTN-Collected-Rules:114.243.119.69-114.243.119.69
 all@BTN-Collected-Rules:115.207.41.175-115.207.41.175
+all@BTN-Collected-Rules:115.207.42.100-115.207.42.100
 all@BTN-Collected-Rules:115.207.42.154-115.207.42.154
 all@BTN-Collected-Rules:115.221.240.116-115.221.240.116
 all@BTN-Collected-Rules:115.221.240.172-115.221.240.172
@@ -671,11 +673,11 @@ all@BTN-Collected-Rules:115.222.151.99-115.222.151.99
 all@BTN-Collected-Rules:116.28.87.168-116.28.87.168
 all@BTN-Collected-Rules:116.113.133.21-116.113.133.21
 all@BTN-Collected-Rules:116.231.245.148-116.231.245.148
+all@BTN-Collected-Rules:116.241.211.221-116.241.211.221
 all@BTN-Collected-Rules:117.29.36.93-117.29.36.93
 all@BTN-Collected-Rules:117.154.152.251-117.154.152.251
 all@BTN-Collected-Rules:117.185.163.117-117.185.163.117
 all@BTN-Collected-Rules:118.114.60.173-118.114.60.173
-all@BTN-Collected-Rules:118.168.11.186-118.168.11.186
 all@BTN-Collected-Rules:118.240.131.137-118.240.131.137
 all@BTN-Collected-Rules:119.165.172.140-119.165.172.140
 all@BTN-Collected-Rules:120.229.69.126-120.229.69.126
@@ -695,6 +697,7 @@ all@BTN-Collected-Rules:125.105.242.120-125.105.242.120
 all@BTN-Collected-Rules:125.105.243.44-125.105.243.44
 all@BTN-Collected-Rules:125.105.243.231-125.105.243.231
 all@BTN-Collected-Rules:125.106.20.143-125.106.20.143
+all@BTN-Collected-Rules:125.106.22.160-125.106.22.160
 all@BTN-Collected-Rules:125.106.92.148-125.106.92.148
 all@BTN-Collected-Rules:125.106.93.127-125.106.93.127
 all@BTN-Collected-Rules:125.106.94.107-125.106.94.107
@@ -702,7 +705,6 @@ all@BTN-Collected-Rules:125.106.95.44-125.106.95.44
 all@BTN-Collected-Rules:125.106.156.196-125.106.156.196
 all@BTN-Collected-Rules:125.106.158.41-125.106.158.41
 all@BTN-Collected-Rules:125.106.190.6-125.106.190.6
-all@BTN-Collected-Rules:125.123.145.9-125.123.145.9
 all@BTN-Collected-Rules:125.126.168.96-125.126.168.96
 all@BTN-Collected-Rules:133.106.40.53-133.106.40.53
 all@BTN-Collected-Rules:138.199.60.166-138.199.60.166
@@ -732,8 +734,7 @@ all@BTN-Collected-Rules:182.91.160.74-182.91.160.74
 all@BTN-Collected-Rules:182.233.17.74-182.233.17.74
 all@BTN-Collected-Rules:183.36.182.229-183.36.182.229
 all@BTN-Collected-Rules:183.45.79.251-183.45.79.251
-all@BTN-Collected-Rules:183.150.184.157-183.150.184.157
-all@BTN-Collected-Rules:183.150.184.219-183.150.184.219
+all@BTN-Collected-Rules:183.150.184.1-183.150.184.254
 all@BTN-Collected-Rules:183.150.185.102-183.150.185.102
 all@BTN-Collected-Rules:183.150.186.240-183.150.186.240
 all@BTN-Collected-Rules:183.150.187.179-183.150.187.179
@@ -743,7 +744,6 @@ all@BTN-Collected-Rules:185.203.56.12-185.203.56.12
 all@BTN-Collected-Rules:194.13.81.161-194.13.81.161
 all@BTN-Collected-Rules:195.154.125.55-195.154.125.55
 all@BTN-Collected-Rules:195.154.125.57-195.154.125.57
-all@BTN-Collected-Rules:204.12.149.60-204.12.149.60
 all@BTN-Collected-Rules:210.10.76.83-210.10.76.83
 all@BTN-Collected-Rules:210.197.130.199-210.197.130.199
 all@BTN-Collected-Rules:211.103.112.139-211.103.112.139
@@ -759,8 +759,10 @@ all@BTN-Collected-Rules:219.155.44.196-219.155.44.196
 all@BTN-Collected-Rules:220.185.48.1-220.185.48.254
 all@BTN-Collected-Rules:220.198.240.109-220.198.240.109
 all@BTN-Collected-Rules:220.240.243.138-220.240.243.138
+all@BTN-Collected-Rules:221.216.117.130-221.216.117.130
 all@BTN-Collected-Rules:221.224.162.38-221.224.162.38
 all@BTN-Collected-Rules:223.73.18.238-223.73.18.238
+all@BTN-Collected-Rules:223.91.6.159-223.91.6.159
 all@BTN-Collected-Rules:2001:e68:5419:3ea0::-2001:e68:5419:3eaf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2001:41d0:8:e320::-2001:41d0:8:e32f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2001:b011:7:1700::-2001:b011:7:170f:ffff:ffff:ffff:ffff
@@ -772,11 +774,13 @@ all@BTN-Collected-Rules:2408:823c:ba0:9ad0::-2408:823c:ba0:9adf:ffff:ffff:ffff:f
 all@BTN-Collected-Rules:2408:8256:87a:2110::-2408:8256:87a:211f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2408:8270:222e:a730::-2408:8270:222e:a73f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2408:8270:222e:a740::-2408:8270:222e:a74f:ffff:ffff:ffff:ffff
+all@BTN-Collected-Rules:2408:8806:53:7ae0::-2408:8806:53:7aef:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2408:8948:2010:6d70::-2408:8948:2010:6d7f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a1a:364:c3e0::-2409:8a1a:364:c3ef:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a1e:92f8:c3b0::-2409:8a1e:92f8:c3bf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a20:8e4a:3510::-2409:8a20:8e4a:351f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a28:3611:8590::-2409:8a28:3611:859f:ffff:ffff:ffff:ffff
+all@BTN-Collected-Rules:2409:8a28:3e25:3880::-2409:8a28:3e25:388f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a28:46cc:a340::-2409:8a28:46cc:a34f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a4c:5442:8db0::-2409:8a4c:5442:8dbf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:2409:8a55:8874:9910::-2409:8a55:8874:991f:ffff:ffff:ffff:ffff
@@ -797,15 +801,14 @@ all@BTN-Collected-Rules:240e:390:3a00:7a90::-240e:390:3a00:7a9f:ffff:ffff:ffff:f
 all@BTN-Collected-Rules:240e:390:7c14:250::-240e:390:7c14:25f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:390:7c14:2a0::-240e:390:7c14:2af:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:390:7c64:9520::-240e:390:7c64:952f:ffff:ffff:ffff:ffff
+all@BTN-Collected-Rules:240e:390:7c92:d040::-240e:390:7c92:d04f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:390:7c92:d1b0::-240e:390:7c92:d1bf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:390:7dd0:f0::-240e:390:7dd0:ff:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3001:7360::-240e:394:3001:736f:ffff:ffff:ffff:ffff
-all@BTN-Collected-Rules:240e:394:3041:7d60::-240e:394:3041:7d6f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3045:f2f0::-240e:394:3045:f2ff:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3065:2190::-240e:394:3065:219f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3071:b170::-240e:394:3071:b17f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3073:8410::-240e:394:3073:841f:ffff:ffff:ffff:ffff
-all@BTN-Collected-Rules:240e:394:3073:d5b0::-240e:394:3073:d5bf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:39c:747:dcd0::-240e:39c:747:dcdf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:3a2:1003:df50::-240e:3a2:1003:df5f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:3b1:9ed0:d350::-240e:3b1:9ed0:d35f:ffff:ffff:ffff:ffff
