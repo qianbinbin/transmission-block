@@ -38,8 +38,8 @@ Examples:
 
   # don't block bad clients but the IPs in several blocklists
   $(basename "$0") -b '' \\
-  -e https://www.example.com/blocklist \\
-  -e https://www.example.com/blocklist.gzip
+    -e https://www.example.com/blocklist \\
+    -e https://www.example.com/blocklist.gzip
 
 Options:
   -t, --tr-server <url>

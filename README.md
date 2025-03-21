@@ -9,6 +9,8 @@ Transmission 辅助脚本，屏蔽迅雷等吸血客户端以及在线屏蔽列�
 * 完全端到端访问，理论支持容器中的 Transmission，甚至可以运行在另一主机。
 * 支持受限用户运行。
 * 理论兼容 POSIX Shell 环境。
+* 同步转换 [PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules)
+  为 Transmission 兼容的黑名单（详见 [blocklist](https://github.com/qianbinbin/transmission-block/tree/blocklist) 分支）。
 
 依赖：
 
@@ -16,6 +18,7 @@ Transmission 辅助脚本，屏蔽迅雷等吸血客户端以及在线屏蔽列�
   NAS 系统）的 transmission-remote 可能需要设置 `PATH`，详见配置文件。
 * curl、file 命令（如果使用在线黑名单）。
 * HTTP 服务程序，nginx、busybox httpd、python3 任意一种（排序分先后）。前两者资源占用极低，后两者普遍预装。
+* systemd 235 或以上版本（如果使用 systemd 管理）。要在更低版本上使用，参考[问题排查](#问题排查)。
 
 ## 使用
 
@@ -64,16 +67,32 @@ rm -i /path/to/config/blocklists/leechers.txt*
 mkdir -p /usr/local/bin /usr/local/lib/systemd/system /usr/local/etc/transmission-block
 chmod 700 /usr/local/etc/transmission-block
 curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.sh \
--o /usr/local/bin/transmission-block \
-https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.service \
--o /usr/local/lib/systemd/system/transmission-block.service \
-https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.conf \
--o /usr/local/etc/transmission-block/transmission-block.conf
+  -o /usr/local/bin/transmission-block \
+  https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.service \
+  -o /usr/local/lib/systemd/system/transmission-block.service \
+  https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.conf \
+  -o /usr/local/etc/transmission-block/transmission-block.conf
 chmod +x /usr/local/bin/transmission-block
 systemctl daemon-reload
 ```
 
 在 `/usr/local/etc/transmission-block/transmission-block.conf` 中设置 `TR_AUTH` 用户名和密码。其余均为可选参数，用法由注释给出。
+
+> \[!TIP]
+> 推荐启用 [BTN-Collected-Rules](https://github.com/qianbinbin/transmission-block/tree/blocklist) 黑名单：
+>
+> ```
+> EXTERNAL_BL=https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p
+> # 更新较为频繁
+> RENEW_INTERVAL=1h
+> ```
+>
+> | 列表 | 备注 |
+> | ---- | ---- |
+> | [完整列表](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p) | 包括 IPv4 和 IPv6 地址，适用于 Transmission v4.0.0 及以上版本 |
+> | [完整列表](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all.p2p) | 同上，jsDelivr CDN 有一定延迟 |
+> | [仅 IPv4](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all-ipv4.p2p) | 仅 IPv4 地址，适用于 Transmission v4.0.0 以下版本 |
+> | [仅 IPv4](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all-ipv4.p2p) | 同上，jsDelivr CDN 有一定延迟 |
 
 运行：
 
@@ -90,7 +109,7 @@ journalctl -f -u transmission-block.service # 查看 log
 
 ```sh
 curl https://raw.githubusercontent.com/qianbinbin/transmission-block/master/transmission-block.sh \
--o ./transmission-block.sh
+  -o ./transmission-block.sh
 chmod +x ./transmission-block.sh
 export TR_AUTH=username:password # 用户名和密码，可以加入到环境变量
 ./transmission-block.sh # ./transmission-block.sh -h 查看更多参数
@@ -156,3 +175,10 @@ Transmission 会更新黑名单到[配置目录](https://github.com/transmission
   systemctl daemon-reload
   ```
   如果你不在乎安全问题，可以删除文件中 `DynamicUser=` 和 `User=` 的行，这将直接以 root 用户运行。
+
+## 鸣谢
+
+[blocklist](https://github.com/qianbinbin/transmission-block/tree/blocklist)
+分支同步并转换以下数据为 Transmission 兼容的格式：
+
+* [PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules)，[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans) 许可。
