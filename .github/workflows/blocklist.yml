@@ -1,0 +1,89 @@
+name: Generate P2P Blocklists
+
+on:
+  schedule:
+    - cron: '0,30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TARGET_BRANCH: blocklist
+      README: README.md
+      README_TMP: .README.md
+    steps:
+      - name: Install dependences
+        run: |
+          sudo apt-get update
+          sudo apt-get install ipcalc-ng
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git show-ref --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
+            git checkout "$TARGET_BRANCH"
+          else
+            git checkout --orphan "$TARGET_BRANCH"
+            git reset --hard
+          fi
+          git restore --source master ip-to-p2p.sh
+          {
+            echo "# P2P Blocklists"
+            echo ""
+            echo "The blocklists have been converted to a Transmission-compatible P2P plaintext format,"
+            echo "using [$GITHUB_REPOSITORY]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY) under MIT License."
+            echo ""
+          } >"$README_TMP"
+
+      - name: Generate all@BTN-Collected-Rules
+        env:
+          SRC: "[PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules)"
+          SRC_LICENSE: "[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans)"
+          SRC_URL: https://raw.githubusercontent.com/PBH-BTN/BTN-Collected-Rules/main/combine/all.txt
+          DEST_NAME: all@BTN-Collected-Rules
+          DEST_PREFIX: btn-all
+        run: |
+          new_etag=$(curl -fsSL -I "$SRC_URL" | grep -i '^etag: ' | cut -c 7-)
+          [ -n "$new_etag" ]
+          md=$(sed -n "/^## $DEST_NAME$/,/^## /p" "$README" 2>/dev/null) || true
+          old_etag=$(echo "$md" | sed -n -E 's/^Etag: (.*)$/\1/p')
+          if [ "$new_etag" = "$old_etag" ]; then
+            # Keep unchanged
+            updated=$(echo "$md" | sed -n -E 's/^Updated: (.*)$/\1/p')
+          else
+            updated=$(TZ=Asia/Shanghai date +"%Y-%m-%d %H:%M %z")
+            ./ip-to-p2p.sh --desc "$DEST_NAME" --prefix "./$DEST_PREFIX" --ip-version all --ip-version 4 "$SRC_URL"
+          fi
+
+          {
+            echo "## $DEST_NAME"
+            echo ""
+            echo "Source: $SRC under $SRC_LICENSE License"
+            echo ""
+            echo "Etag: $new_etag"
+            echo ""
+            echo "Updated: $updated"
+            echo ""
+            echo "- URL: <https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$TARGET_BRANCH/$DEST_PREFIX.p2p>"
+            echo "- CDN: <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX.p2p>"
+            echo "- URL (IPv4): <https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$TARGET_BRANCH/$DEST_PREFIX-ipv4.p2p>"
+            echo "- CDN (IPv4): <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX-ipv4.p2p>"
+          } >>"$README_TMP"
+
+      - name: Commit
+        run: |
+          mv "$README_TMP" "$README"
+          git add ./*.p2p* "$README"
+          git diff-index --quiet HEAD || {
+            git commit -m "Generate blocklists"
+            git push -u origin "$TARGET_BRANCH"
+          }
