@@ -46,8 +46,9 @@ Options:
                       connect to the Transmission session at <url>
                       (default: $TR_SERVER)
   -c, --check-interval <num>
-                      check the peers and/or external blocklists every this
-                      period of time in seconds; must be greater than 0
+                      set work interval in seconds for checking if the peers are
+                      valid and/or blocklists are outdated, etc.; must be
+                      greater than 0
                       (default: $CHECK_INTERVAL)
   -b, --block <clients>
                       clients to block; <clients> should be case-sensitive
