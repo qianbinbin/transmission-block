@@ -6,9 +6,9 @@
 # transmission-block: Block leecher clients and bad IPs for Transmission
 # https://github.com/qianbinbin/transmission-block
 
-[ -z "${TR_SERVER+x}" ] && TR_SERVER="127.0.0.1:9091"
 [ -z "${BL_SERVER+x}" ] && BL_SERVER="127.0.0.1:9098"
 # https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc
+# https://github.com/PBH-BTN/quick-references/blob/main/peer_ids.md
 [ -z "${LEECHER_CLIENTS+x}" ] && LEECHER_CLIENTS='%FF%1D%FF%FF%FF8I%FF,-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa) 0\.13\.8,libtorrent (Rasterbar) 2\.0\.7,QQDownload,Thunder,Xfplay,Xunlei'
 [ -z "${WORK_DIR+x}" ] && WORK_DIR=./transmission-block
 # [ -z "${EXTERNAL_BL+x}" ] && EXTERNAL_BL=
@@ -25,9 +25,10 @@ Block leecher clients and bad IPs for Transmission.
 
 The script maintains a blocklist for IPs of unwanted clients and/or IPs in
 external blocklists, and sets up an HTTP service for Transmission to access it
-via "blocklist-url".
+via blocklist URL.
 
-Set the TR_AUTH environment variable to username:password before using.
+Enable remote access for Transmission before using. If authentication is
+enabled, also set the TR_AUTH environment variable to username:password.
 
 Examples:
   # block bad peers using default leecher clients, see --block
@@ -44,12 +45,11 @@ Examples:
 Options:
   -t, --tr-server <url>
                       connect to the Transmission session at <url>
-                      (default: $TR_SERVER)
+                      (default: localhost:9091)
   -c, --check-interval <num>
                       set work interval in seconds for checking if the peers are
                       valid and/or blocklists are outdated, etc.; must be
-                      greater than 0
-                      (default: $CHECK_INTERVAL)
+                      greater than 0 (default: $CHECK_INTERVAL)
   -b, --block <clients>
                       clients to block; <clients> should be case-sensitive
                       regexes with BRE (POSIX) flavor separated by ','s; set to
@@ -75,7 +75,7 @@ $(echo "(default: '$LEECHER_CLIENTS')" | fmt -w 52 -s | sed "s/^/$(printf '%22s'
   -n, --no-restart    do not restart the torrent if leechers detected, which
                       means the blocklist would not take effect immediately; see
                       issue #732 in the Transmission GitHub repo, which is
-                      expected to be fixed in v4.1.0, and this option will not
+                      expected to be fixed in v4.1.0, hence this option will not
                       work for versions >= v4.1.0
   -h, --help          display this help and exit
 
@@ -95,49 +95,27 @@ proc_alive() { kill -0 "$1" 2>/dev/null; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-  -t | --tr-server)
-    [ -n "$2" ] || _exit
-    TR_SERVER="$2" && shift 2
-    ;;
-  -c | --check-interval)
-    [ -n "$2" ] || _exit
-    CHECK_INTERVAL="$2" && shift 2
-    ;;
-  -b | --block)
-    [ -n "$2" ] || _exit
-    LEECHER_CLIENTS="$2" && shift 2
-    ;;
-  -C | --clear-interval)
-    [ -n "$2" ] || _exit
-    CLEAR_INTERVAL="$2" && shift 2
-    ;;
-  -e | --external-blocklist)
-    [ -n "$2" ] || _exit
-    EXTERNAL_BL="$EXTERNAL_BL $2" && shift 2
-    ;;
-  -r | --renew-interval)
-    [ -n "$2" ] || _exit
-    RENEW_INTERVAL="$2" && shift 2
-    ;;
-  -w | --work-dir)
-    [ -n "$2" ] || _exit
-    WORK_DIR="$2" && shift 2
-    ;;
-  -s | --blocklist-server)
-    [ -n "$2" ] || _exit
-    BL_SERVER="$2" && shift 2
-    ;;
+  -t | --tr-server) { [ -n "$2" ] || _exit; } && TR_SERVER="$2" && shift 2 ;;
+  -c | --check-interval) { [ -n "$2" ] || _exit; } && CHECK_INTERVAL="$2" && shift 2 ;;
+  -b | --block) { [ -n "$2" ] || _exit; } && LEECHER_CLIENTS="$2" && shift 2 ;;
+  -C | --clear-interval) { [ -n "$2" ] || _exit; } && CLEAR_INTERVAL="$2" && shift 2 ;;
+  -e | --external-blocklist) { [ -n "$2" ] || _exit; } && EXTERNAL_BL="$EXTERNAL_BL $2" && shift 2 ;;
+  -r | --renew-interval) { [ -n "$2" ] || _exit; } && RENEW_INTERVAL="$2" && shift 2 ;;
+  -w | --work-dir) { [ -n "$2" ] || _exit; } && WORK_DIR="$2" && shift 2 ;;
+  -s | --blocklist-server) { [ -n "$2" ] || _exit; } && BL_SERVER="$2" && shift 2 ;;
   -n | --no-restart) RESTART_TORRENT=false && shift ;;
   -h | --help) error "$USAGE" && exit ;;
   *) _exit ;;
   esac
 done
 
-[ -z "$TR_AUTH" ] && error "The TR_AUTH environment variable is not set" && exit 1
+# Allow authentication to be disabled
+# [ -z "$TR_AUTH" ] && error "The TR_AUTH environment variable is not set" && exit 1
 exist transmission-remote || { error "transmission-remote: command not found" && exit 127; }
 # <host:port> is not necessary; allow reverse proxy
 # echo "$TR_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$TR_SERVER: invalid transmission server" && _exit; }
-[ -z "$TR_SERVER" ] && error "$TR_SERVER: no Transmission server specified" && _exit
+# Allow empty server (default to localhost:9091)
+# [ -z "$TR_SERVER" ] && error "$TR_SERVER: no Transmission server specified" && _exit
 echo "$BL_SERVER" | grep -qs -E '^.+:[0-9]+$' || { error "$BL_SERVER: invalid blocklist server" && _exit; }
 [ -z "$LEECHER_CLIENTS" ] && [ -z "$EXTERNAL_BL" ] && error "Please specify --block and/or --external-blocklist" && _exit
 EXTERNAL_BL=$(echo "$EXTERNAL_BL" | xargs | tr ' ' '\n' | sort -u | xargs)
@@ -158,7 +136,7 @@ to_seconds() {
 }
 CLEAR_INTERVAL=$(to_seconds "$CLEAR_INTERVAL")
 RENEW_INTERVAL=$(to_seconds "$RENEW_INTERVAL")
-[ "$RENEW_INTERVAL" -eq 0 ] && error "renew interval can not be 0" && _exit
+[ "$RENEW_INTERVAL" -eq 0 ] && error "Renew interval can not be 0" && _exit
 
 # ------------------------------------------------------------------------------
 # PARSE ARGS
@@ -170,7 +148,10 @@ RENEW_INTERVAL=$(to_seconds "$RENEW_INTERVAL")
 
 LEECHER_LIST="$WORK_DIR/leechers.p2p"
 
-tr_remote() { transmission-remote "$TR_SERVER" --authenv "$@"; }
+TR_REMOTE=transmission-remote
+[ -n "$TR_SERVER" ] && TR_REMOTE="$TR_REMOTE $TR_SERVER"
+[ -n "$TR_AUTH" ] && TR_REMOTE="$TR_REMOTE --authenv"
+tr_remote() { $TR_REMOTE "$@"; }
 _error "Connecting to $TR_SERVER... "
 TR_VERSION=$(tr_remote --session-info | sed -n -E 's/.*Daemon version: ([^ ]*).*/\1/p')
 [ -z "$TR_VERSION" ] && error "Could not connect" && exit 1
