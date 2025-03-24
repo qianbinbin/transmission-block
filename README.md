@@ -47,16 +47,30 @@ rm -i /path/to/config/blocklists/leechers.txt*
 > transmission-remote --auth username:password --session-info | sed -n -E 's/.*Configuration directory: (.*)/\1/p'
 > ```
 
-### 修改 Transmission 配置
+### 设置 Transmission
 
-在 Transmission [配置文件](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md)中：
+* 启用远程访问；设置用户名和密码（可选）。
+* 启用黑名单，并设置为 `http://127.0.0.1:9098/blocklist.p2p.gz`。
 
-* `"blocklist-enabled"` 设为 `true`。
-* `"blocklist-url"` 设为 `"http://127.0.0.1:9098/blocklist.p2p.gz"`。如不使用默认配置（见配置文件中的
-  `TR_SERVER`），则要相应修改。
+以 transmission-daemon 为例，在[配置文件](https://github.com/transmission/transmission/blob/main/docs/Configuration-Files.md)中：
+
+```json
+{
+  "rpc-enabled": true,                                      <--- 启用远程访问
+  "rpc-authentication-required": true,                      <--- 启用用户验证
+  "rpc-username": "username",                               <--- 用户名
+  "rpc-password": "password",                               <--- 密码
+  "blocklist-enabled": true,                                <--- 启用黑名单
+  "blocklist-url": "http://127.0.0.1:9098/blocklist.p2p.gz" <--- 黑名单地址
+}
+```
 
 > \[!TIP]
-> transmission-daemon 用户使用 `systemctl reload transmission-daemon.service`
+> 修改密码建议在 daemon 关闭状态下，因为密码会在启动后加盐哈希。
+>
+> 如不使用默认 HTTP 监听地址（见配置文件中的 `BL_SERVER`），则 `"blocklist-url"` 要相应修改。
+>
+> 如果 daemon 正在运行，使用 `systemctl reload transmission-daemon.service`
 > [重新加载配置](https://github.com/transmission/transmission/blob/main/docs/Editing-Configuration-Files.md#reload-settings)，直接重启不会生效。
 
 ### 自动运行（systemd）
@@ -76,7 +90,7 @@ chmod +x /usr/local/bin/transmission-block
 systemctl daemon-reload
 ```
 
-在 `/usr/local/etc/transmission-block/transmission-block.conf` 中设置 `TR_AUTH` 用户名和密码。其余均为可选参数，用法由注释给出。
+如果启用了用户验证，在 `/usr/local/etc/transmission-block/transmission-block.conf` 中设置 `TR_AUTH` 用户名和密码。其余均为可选参数，用法由注释给出。
 
 > \[!TIP]
 > 推荐启用 [BTN-Collected-Rules](https://github.com/qianbinbin/transmission-block/tree/blocklist) 黑名单：
