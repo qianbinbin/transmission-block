@@ -18,7 +18,6 @@ all@BTN-Collected-Rules:39.77.209.172-39.77.209.172
 all@BTN-Collected-Rules:39.167.3.8-39.167.3.8
 all@BTN-Collected-Rules:39.183.156.12-39.183.156.12
 all@BTN-Collected-Rules:39.184.120.6-39.184.120.6
-all@BTN-Collected-Rules:42.126.35.99-42.126.35.99
 all@BTN-Collected-Rules:49.74.103.19-49.74.103.19
 all@BTN-Collected-Rules:49.84.90.228-49.84.90.228
 all@BTN-Collected-Rules:58.240.69.103-58.240.69.103
@@ -69,6 +68,8 @@ all@BTN-Collected-Rules:112.48.60.11-112.48.60.11
 all@BTN-Collected-Rules:112.49.128.100-112.49.128.100
 all@BTN-Collected-Rules:112.90.251.120-112.90.251.120
 all@BTN-Collected-Rules:112.102.36.31-112.102.36.31
+all@BTN-Collected-Rules:112.119.142.183-112.119.142.183
+all@BTN-Collected-Rules:112.195.226.79-112.195.226.79
 all@BTN-Collected-Rules:112.226.217.217-112.226.217.217
 all@BTN-Collected-Rules:113.78.112.2-113.78.112.2
 all@BTN-Collected-Rules:113.99.161.69-113.99.161.69
@@ -97,7 +98,6 @@ all@BTN-Collected-Rules:117.68.172.146-117.68.172.146
 all@BTN-Collected-Rules:117.147.29.136-117.147.29.136
 all@BTN-Collected-Rules:117.148.76.198-117.148.76.198
 all@BTN-Collected-Rules:117.152.201.50-117.152.201.50
-all@BTN-Collected-Rules:117.185.163.117-117.185.163.117
 all@BTN-Collected-Rules:117.186.3.130-117.186.3.130
 all@BTN-Collected-Rules:119.52.236.28-119.52.236.28
 all@BTN-Collected-Rules:119.118.37.93-119.118.37.93
@@ -112,7 +112,6 @@ all@BTN-Collected-Rules:120.235.49.227-120.235.49.227
 all@BTN-Collected-Rules:120.235.73.243-120.235.73.243
 all@BTN-Collected-Rules:120.235.237.14-120.235.237.14
 all@BTN-Collected-Rules:120.243.233.197-120.243.233.197
-all@BTN-Collected-Rules:121.232.125.119-121.232.125.119
 all@BTN-Collected-Rules:121.236.197.31-121.236.197.31
 all@BTN-Collected-Rules:122.100.140.223-122.100.140.223
 all@BTN-Collected-Rules:122.224.33.1-122.224.33.254
@@ -142,10 +141,12 @@ all@BTN-Collected-Rules:144.255.148.239-144.255.148.239
 all@BTN-Collected-Rules:151.242.42.116-151.242.42.116
 all@BTN-Collected-Rules:152.70.243.213-152.70.243.213
 all@BTN-Collected-Rules:153.187.30.2-153.187.30.2
+all@BTN-Collected-Rules:156.59.127.219-156.59.127.219
 all@BTN-Collected-Rules:168.70.99.101-168.70.99.101
 all@BTN-Collected-Rules:171.94.104.173-171.94.104.173
 all@BTN-Collected-Rules:171.94.107.155-171.94.107.155
 all@BTN-Collected-Rules:171.94.107.158-171.94.107.158
+all@BTN-Collected-Rules:171.104.85.138-171.104.85.138
 all@BTN-Collected-Rules:171.105.200.147-171.105.200.147
 all@BTN-Collected-Rules:171.115.194.79-171.115.194.79
 all@BTN-Collected-Rules:171.217.158.33-171.217.158.33
@@ -171,14 +172,12 @@ all@BTN-Collected-Rules:213.152.161.35-213.152.161.35
 all@BTN-Collected-Rules:218.71.11.82-218.71.11.82
 all@BTN-Collected-Rules:218.71.11.154-218.71.11.154
 all@BTN-Collected-Rules:219.124.168.133-219.124.168.133
-all@BTN-Collected-Rules:219.139.247.56-219.139.247.56
 all@BTN-Collected-Rules:219.140.34.91-219.140.34.91
 all@BTN-Collected-Rules:220.87.61.148-220.87.61.148
 all@BTN-Collected-Rules:220.198.240.109-220.198.240.109
 all@BTN-Collected-Rules:222.68.0.133-222.68.0.133
 all@BTN-Collected-Rules:222.142.106.52-222.142.106.52
 all@BTN-Collected-Rules:223.89.238.7-223.89.238.7
-all@BTN-Collected-Rules:223.91.6.159-223.91.6.159
 all@BTN-Collected-Rules:223.122.110.219-223.122.110.219
 all@BTN-Collected-Rules:223.154.119.178-223.154.119.178
 all@BTN-Collected-Rules:223.155.209.71-223.155.209.71
@@ -229,7 +228,6 @@ all@BTN-Collected-Rules:240e:394:3017:4630::-240e:394:3017:463f:ffff:ffff:ffff:f
 all@BTN-Collected-Rules:240e:394:301a:c30::-240e:394:301a:c3f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:301e:2130::-240e:394:301e:213f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3021:43d0::-240e:394:3021:43df:ffff:ffff:ffff:ffff
-all@BTN-Collected-Rules:240e:394:3035:d190::-240e:394:3035:d19f:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:3036:94e0::-240e:394:3036:94ef:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:303b:e2b0::-240e:394:303b:e2bf:ffff:ffff:ffff:ffff
 all@BTN-Collected-Rules:240e:394:303d:b880::-240e:394:303d:b88f:ffff:ffff:ffff:ffff
