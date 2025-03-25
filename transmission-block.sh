@@ -291,7 +291,7 @@ renew_external_lists() {
   for url in $EXTERNAL_BL; do
     _error "Updating $url... "
     url_hash=$(printf '%s' "$url" | do_md5)
-    etag=$(_curl --head "$url" | grep -i '^etag: ' | cut -c 7-)
+    etag=$(_curl --head "$url" | grep -i '^etag: ' | cut -c 7- | tr -d '\r')
     grep -qs "^$etag$" "$EXTERNAL_DIR/$url_hash.etag" && error "Already up to date" && continue
     _curl --compressed -o "$EXTERNAL_DIR/$url_hash.tmp" "$url" || {
       error "Could not download, skipping"

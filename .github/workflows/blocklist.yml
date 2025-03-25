@@ -52,7 +52,7 @@ jobs:
           DEST_NAME: all@BTN-Collected-Rules
           DEST_PREFIX: btn-all
         run: |
-          new_etag=$(curl -fsSL -I "$SRC_URL" | grep -i '^etag: ' | cut -c 7-)
+          new_etag=$(curl -fsSL -I "$SRC_URL" | grep -i '^etag: ' | cut -c 7- | tr -d '\r')
           [ -n "$new_etag" ]
           md=$(sed -n "/^## $DEST_NAME$/,/^## /p" "$README" 2>/dev/null) || true
           old_etag=$(echo "$md" | sed -n -E 's/^Etag: (.*)$/\1/p')
