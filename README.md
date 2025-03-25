@@ -9,9 +9,11 @@ Source: [PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-R
 
 Etag: "8785a31a671f5b75c27cb4a01c6020c0b8a38e3d28d6a31530bb487885104084"
 
-Updated: 2025-03-25 23:39 +0800
+Updated: 2025-03-26 00:12 +0800
 
 - URL: <https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p>
-- CDN: <https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all.p2p>
+- Cloudflare: <https://blocklist.binac.org/btn-all.p2p>
+- jsDelivr: <https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all.p2p>
 - URL (IPv4): <https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all-ipv4.p2p>
-- CDN (IPv4): <https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all-ipv4.p2p>
+- Cloudflare (IPv4): <https://blocklist.binac.org/btn-all-ipv4.p2p>
+- jsDelivr (IPv4): <https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all-ipv4.p2p>
