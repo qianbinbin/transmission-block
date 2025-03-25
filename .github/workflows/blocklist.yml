@@ -74,9 +74,11 @@ jobs:
             echo "Updated: $updated"
             echo ""
             echo "- URL: <https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$TARGET_BRANCH/$DEST_PREFIX.p2p>"
-            echo "- CDN: <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX.p2p>"
+            echo "- Cloudflare: <https://blocklist.binac.org/$DEST_PREFIX.p2p>"
+            echo "- jsDelivr: <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX.p2p>"
             echo "- URL (IPv4): <https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$TARGET_BRANCH/$DEST_PREFIX-ipv4.p2p>"
-            echo "- CDN (IPv4): <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX-ipv4.p2p>"
+            echo "- Cloudflare (IPv4): <https://blocklist.binac.org/$DEST_PREFIX-ipv4.p2p>"
+            echo "- jsDelivr (IPv4): <https://cdn.jsdelivr.net/gh/$GITHUB_REPOSITORY@$TARGET_BRANCH/$DEST_PREFIX-ipv4.p2p>"
           } >>"$README_TMP"
 
       - name: Commit

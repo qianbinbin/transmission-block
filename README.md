@@ -101,12 +101,12 @@ systemctl daemon-reload
 > RENEW_INTERVAL=1h
 > ```
 >
-> | 列表 | 备注 |
-> | ---- | ---- |
-> | [完整列表](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p) | 包括 IPv4 和 IPv6 地址，适用于 Transmission v4.0.0 及以上版本 |
-> | [完整列表](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all.p2p) | 同上，jsDelivr CDN 有一定延迟 |
-> | [仅 IPv4](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all-ipv4.p2p) | 仅 IPv4 地址，适用于 Transmission v4.0.0 以下版本 |
-> | [仅 IPv4](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all-ipv4.p2p) | 同上，jsDelivr CDN 有一定延迟 |
+> | 列表 | CDN | 备注 |
+> | ---- | --- | ---- |
+> | [完整列表](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p) | [Cloudflare](https://blocklist.binac.org/btn-all.p2p) [jsDelivr](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all.p2p) | 包括 IPv4 和 IPv6 地址，适用于 Transmission v4.0.0 及以上版本 |
+> | [仅 IPv4](https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all-ipv4.p2p) | [Cloudflare](https://blocklist.binac.org/btn-all-ipv4.p2p) [jsDelivr](https://cdn.jsdelivr.net/gh/qianbinbin/transmission-block@blocklist/btn-all-ipv4.p2p) | 仅 IPv4 地址，适用于 Transmission v4.0.0 以下版本 |
+>
+> 注：jsDelivr 有一定延迟，部分地区可能存在 DNS 污染。
 
 运行：
 
