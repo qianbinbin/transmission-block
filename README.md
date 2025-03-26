@@ -7,9 +7,9 @@ using [qianbinbin/transmission-block](https://github.com/qianbinbin/transmission
 
 Source: [PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules) under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans) License
 
-Etag: "d51ec847680a095455318befc207afd7fc4a8e0c366f4fed165130e78f60ed32"
+Etag: "cda8bfde3fb1aede2e2f8122aae1266bd82c0969ed9328406f693adb1afeb249"
 
-Updated: 2025-03-26 23:40 +0800
+Updated: 2025-03-27 00:15 +0800
 
 - URL: <https://raw.githubusercontent.com/qianbinbin/transmission-block/blocklist/btn-all.p2p>
 - Cloudflare: <https://blocklist.binac.org/btn-all.p2p>
