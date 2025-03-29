@@ -616,7 +616,6 @@ all@BTN-Collected-Rules:36.26.152.30-36.26.152.30
 all@BTN-Collected-Rules:36.26.154.5-36.26.154.5
 all@BTN-Collected-Rules:36.26.154.108-36.26.154.108
 all@BTN-Collected-Rules:36.26.155.215-36.26.155.215
-all@BTN-Collected-Rules:36.26.155.227-36.26.155.227
 all@BTN-Collected-Rules:36.49.158.105-36.49.158.105
 all@BTN-Collected-Rules:36.148.89.70-36.148.89.70
 all@BTN-Collected-Rules:36.226.205.203-36.226.205.203
@@ -632,6 +631,7 @@ all@BTN-Collected-Rules:49.87.37.110-49.87.37.110
 all@BTN-Collected-Rules:50.54.129.151-50.54.129.151
 all@BTN-Collected-Rules:58.33.109.196-58.33.109.196
 all@BTN-Collected-Rules:58.210.105.210-58.210.105.210
+all@BTN-Collected-Rules:59.34.58.31-59.34.58.31
 all@BTN-Collected-Rules:59.42.121.200-59.42.121.200
 all@BTN-Collected-Rules:59.47.237.201-59.47.237.201
 all@BTN-Collected-Rules:59.124.154.55-59.124.154.55
@@ -648,6 +648,7 @@ all@BTN-Collected-Rules:88.157.139.22-88.157.139.22
 all@BTN-Collected-Rules:89.58.60.238-89.58.60.238
 all@BTN-Collected-Rules:89.116.182.32-89.116.182.32
 all@BTN-Collected-Rules:93.152.212.45-93.152.212.45
+all@BTN-Collected-Rules:94.130.164.41-94.130.164.41
 all@BTN-Collected-Rules:94.159.107.250-94.159.107.250
 all@BTN-Collected-Rules:101.68.48.13-101.68.48.13
 all@BTN-Collected-Rules:101.87.252.198-101.87.252.198
@@ -658,6 +659,7 @@ all@BTN-Collected-Rules:104.28.243.32-104.28.243.32
 all@BTN-Collected-Rules:110.6.69.121-110.6.69.121
 all@BTN-Collected-Rules:110.18.234.244-110.18.234.244
 all@BTN-Collected-Rules:110.185.230.87-110.185.230.87
+all@BTN-Collected-Rules:112.3.148.72-112.3.148.72
 all@BTN-Collected-Rules:112.49.187.192-112.49.187.192
 all@BTN-Collected-Rules:112.67.241.21-112.67.241.21
 all@BTN-Collected-Rules:112.87.102.155-112.87.102.155
@@ -820,7 +822,6 @@ all@BTN-Collected-Rules:58.253.63.138-58.253.63.138
 all@BTN-Collected-Rules:59.44.131.108-59.44.131.108
 all@BTN-Collected-Rules:59.67.77.177-59.67.77.177
 all@BTN-Collected-Rules:60.137.155.223-60.137.155.223
-all@BTN-Collected-Rules:60.163.23.126-60.163.23.126
 all@BTN-Collected-Rules:60.163.223.161-60.163.223.161
 all@BTN-Collected-Rules:60.255.176.134-60.255.176.134
 all@BTN-Collected-Rules:61.10.139.65-61.10.139.65
@@ -894,7 +895,6 @@ all@BTN-Collected-Rules:112.25.170.155-112.25.170.155
 all@BTN-Collected-Rules:112.48.36.193-112.48.36.193
 all@BTN-Collected-Rules:112.48.98.242-112.48.98.242
 all@BTN-Collected-Rules:112.49.106.101-112.49.106.101
-all@BTN-Collected-Rules:112.96.175.137-112.96.175.137
 all@BTN-Collected-Rules:112.101.182.138-112.101.182.138
 all@BTN-Collected-Rules:112.102.204.219-112.102.204.219
 all@BTN-Collected-Rules:113.73.138.58-113.73.138.58
@@ -932,6 +932,7 @@ all@BTN-Collected-Rules:117.160.30.33-117.160.30.33
 all@BTN-Collected-Rules:117.165.36.54-117.165.36.54
 all@BTN-Collected-Rules:117.175.143.219-117.175.143.219
 all@BTN-Collected-Rules:117.182.13.63-117.182.13.63
+all@BTN-Collected-Rules:117.188.16.155-117.188.16.155
 all@BTN-Collected-Rules:118.137.160.14-118.137.160.14
 all@BTN-Collected-Rules:118.154.9.31-118.154.9.31
 all@BTN-Collected-Rules:118.168.15.161-118.168.15.161
@@ -980,7 +981,6 @@ all@BTN-Collected-Rules:124.176.14.41-124.176.14.41
 all@BTN-Collected-Rules:125.76.52.26-125.76.52.26
 all@BTN-Collected-Rules:125.105.17.189-125.105.17.189
 all@BTN-Collected-Rules:125.107.64.90-125.107.64.90
-all@BTN-Collected-Rules:125.120.154.169-125.120.154.169
 all@BTN-Collected-Rules:126.71.109.103-126.71.109.103
 all@BTN-Collected-Rules:133.114.77.163-133.114.77.163
 all@BTN-Collected-Rules:133.125.84.130-133.125.84.130
