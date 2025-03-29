@@ -10,7 +10,7 @@
 set -e
 
 GZIP=false
-IP_VER=all
+IP_VER_DEFAULT=all
 
 USAGE=$(
   cat <<-END
@@ -54,14 +54,15 @@ while [ $# -gt 0 ]; do
   -d | --desc) { [ -n "$2" ] || _exit; } && DESC="$2" && shift 2 ;;
   -g | --gzip) GZIP=true && shift ;;
   -p | --prefix) { [ -n "$2" ] || _exit; } && PREFIX="$2" && shift 2 ;;
-  -v | --ip-version) { [ -n "$2" ] || _exit; } && IP_VER="$(echo "$IP_VER" "$2" | xargs)" && shift 2 ;;
+  -v | --ip-version) { [ -n "$2" ] || _exit; } && IP_VER="$IP_VER $2" && shift 2 ;;
   -h | --help) error "$USAGE" && exit ;;
   *) _exit ;;
   esac
 done
 
 [ -z "$PREFIX" ] && error "Please specify --prefix" && _exit
-[ -z "$IP_VER" ] && error "No IP version specified" && _exit
+[ -z "${IP_VER+x}" ] && IP_VER="$IP_VER_DEFAULT"
+IP_VER=$(echo "$IP_VER" | xargs)
 URL=$(echo "$URL" | xargs | tr ' ' '\n' | sort -u)
 [ -z "$URL" ] && error "No URL specified" && _exit
 
@@ -79,9 +80,6 @@ for v in $IP_VER; do
   esac
 done
 
-cidr_to_p2p() { echo "$2:$(ipcalc-ng --no-decorate --minaddr "$1")-$(ipcalc-ng --no-decorate --maxaddr "$1")"; }
-ipv4() { echo "$1" | grep -qs -E '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(/[0-9]{1,2})?$'; }
-
 get_desc() {
   domain=$(echo "$1" | sed -E 's|^https?://([^/:]+).*$|\1|')
   path=$(echo "$1" | sed -E 's|^https?://[^/]+([^?#]*).*$|\1|')
@@ -91,32 +89,52 @@ get_desc() {
   esac
 }
 
+RE_IPV4='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(/[0-9]{1,2})?$'
+ip() { grep -E '^[0-9a-fA-F\.:/]+$' "$1"; }
+ipv4() { grep -E "$RE_IPV4" "$1"; }
+no_ipv4() { grep -v -E "$RE_IPV4" "$1"; }
+cidr() { grep '/' "$1"; }
+no_cidr() { grep -v '/' "$1"; }
+convert_ip() { while IFS= read -r _ip; do echo "$1:$_ip-$_ip"; done; }
+convert_cidr() {
+  while IFS= read -r _cidr; do
+    echo "$1:$(ipcalc-ng --no-decorate --minaddr "$_cidr")-$(ipcalc-ng --no-decorate --maxaddr "$_cidr")"
+  done
+}
+
 IN="$TMP_DIR/in"
+IN4="$TMP_DIR/in4"
+IN6="$TMP_DIR/in6"
+OUT4_TMP="$TMP_DIR/out4.tmp"
+OUT6_TMP="$TMP_DIR/out6.tmp"
 for url in $URL; do
+  if [ -n "${DESC+x}" ]; then desc="$DESC"; else desc=$(get_desc "$url"); fi
+  desc=$(echo "$desc" | tr ':' '_')
   _error "Downloading $url... "
   curl -fsSL --retry 5 --compressed -o "$IN" "$url"
   error "Done"
-  grep -E '^[0-9a-fA-F\.:/]+$' "$IN" >"$IN.tmp" && mv "$IN.tmp" "$IN"
-  if [ -n "${DESC+x}" ]; then
-    desc="$DESC"
-  else
-    desc=$(get_desc "$url" | tr ':' '_')
-  fi
-  count=0
+  ip "$IN" >"$IN.tmp" || true
+  mv "$IN.tmp" "$IN"
   total=$(wc -l "$IN" | awk '{ print $1 }')
   [ "$total" -eq 0 ] && error "No IP address found, skipping" && continue
-  while IFS= read -r cidr; do
-    : $((count += 1))
-    printf '\rConverting %s... ' "$count/$total" >&2
-    entry=$(cidr_to_p2p "$cidr" "$desc") || { error "$cidr: could not convert" && continue; }
-    [ -n "$OUT" ] && echo "$entry" >>"$OUT"
-    if ipv4 "$cidr"; then
-      [ -n "$OUT4" ] && echo "$entry" >>"$OUT4"
-    else
-      [ -n "$OUT6" ] && echo "$entry" >>"$OUT6"
-    fi
-    [ $count -eq "$total" ] && error "Done"
-  done <"$IN"
+  ipv4 "$IN" >"$IN4" || true
+  no_ipv4 "$IN" >"$IN6" || true
+  _error "Converting $total rules... "
+  if [ -n "$OUT" ] || [ -n "$OUT4" ]; then
+    no_cidr "$IN4" | convert_ip "$desc" >"$OUT4_TMP"
+    cidr "$IN4" | convert_cidr "$desc" >>"$OUT4_TMP"
+  fi
+  if [ -n "$OUT" ] || [ -n "$OUT6" ]; then
+    no_cidr "$IN6" | convert_ip "$desc" >"$OUT6_TMP"
+    cidr "$IN6" | convert_cidr "$desc" >>"$OUT6_TMP"
+  fi
+  error "Done"
+  if [ -n "$OUT" ]; then
+    cat "$OUT4_TMP" "$OUT6_TMP" >>"$OUT" 2>/dev/null || true
+  fi
+  if [ -n "$OUT4" ]; then cat "$OUT4_TMP" >>"$OUT4"; fi
+  if [ -n "$OUT6" ]; then cat "$OUT6_TMP" >>"$OUT6"; fi
+  rm -f "$OUT4_TMP" "$OUT6_TMP"
 done
 
 if [ -n "$OUT" ]; then
