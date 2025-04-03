@@ -52,16 +52,24 @@ jobs:
           DEST_NAME: all@BTN-Collected-Rules
           DEST_PREFIX: btn-all
         run: |
-          new_etag=$(curl -fsSL -I "$SRC_URL" | grep -i '^etag: ' | cut -c 7- | tr -d '\r')
-          [ -n "$new_etag" ]
           md=$(sed -n "/^## $DEST_NAME$/,/^## /p" "$README" 2>/dev/null) || true
           old_etag=$(echo "$md" | sed -n -E 's/^Etag: (.*)$/\1/p')
-          if [ "$new_etag" = "$old_etag" ]; then
+          new_etag=$(curl -fsSL -I "$SRC_URL" | grep -i '^etag: ' | cut -c 7- | tr -d '\r')
+          if [ -z "$new_etag" ]; then
+            echo "Could not fetch Etag."
+            # Continue if already generated before
+            [ -n "$old_etag" ] || exit 1
+          elif [ "$new_etag" = "$old_etag" ]; then
+            echo "Already up to date."
+          fi
+          if [ -z "$new_etag" ] || [ "$new_etag" = "$old_etag" ]; then
             # Keep unchanged
+            new_etag="$old_etag"
             updated=$(echo "$md" | sed -n -E 's/^Updated: (.*)$/\1/p')
           else
             updated=$(TZ=Asia/Shanghai date +"%Y-%m-%d %H:%M %z")
-            ./ip-to-p2p.sh --desc "$DEST_NAME" --prefix "./$DEST_PREFIX" --ip-version all --ip-version 4 "$SRC_URL"
+            ./ip-to-p2p.sh --desc "$DEST_NAME" --prefix "./$DEST_PREFIX" \
+              --ip-version all --ip-version 4 "$SRC_URL" || echo "Could not generate."
           fi
 
           {
@@ -85,7 +93,15 @@ jobs:
         run: |
           mv "$README_TMP" "$README"
           git add ./*.p2p* "$README"
-          git diff-index --quiet HEAD || {
-            git commit -m "Generate blocklists"
-            git push -u origin "$TARGET_BRANCH"
-          }
+          if git diff-index --quiet HEAD 2>/dev/null; then
+            echo "Nothing to commit."
+            exit
+          fi
+          if git show-ref --quiet --branches "$TARGET_BRANCH"; then
+            git checkout --orphan "$TARGET_BRANCH-tmp"
+            git branch -D "$TARGET_BRANCH"
+            git branch -m "$TARGET_BRANCH"
+            # git gc --aggressive --prune=all
+          fi
+          git commit -m "Generate blocklists"
+          git push -f -u origin "$TARGET_BRANCH"
