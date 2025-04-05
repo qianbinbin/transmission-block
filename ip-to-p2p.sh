@@ -19,7 +19,7 @@ Usage: $0 [OPTION]... [URL]...
 Download and convert IP addresses to P2P plaintext format, with CIDR and IPv6
 support, e.g.
 '193.92.150.2/24' -> 'list@example.com:193.92.150.1-193.92.150.254'.
-Requires ipcalc-ng.
+Requires iprange (for IPv4 CIDR) and ipcalc-ng (for IPv6 CIDR).
 
 Examples:
 
@@ -66,9 +66,6 @@ IP_VER=$(echo "$IP_VER" | xargs)
 URL=$(echo "$URL" | xargs | tr ' ' '\n' | sort -u)
 [ -z "$URL" ] && error "No URL specified" && _exit
 
-exist() { command -v "$1" >/dev/null 2>&1; }
-exist ipcalc-ng || { error "ipcalc-ng: command not found" && exit 127; }
-
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 for v in $IP_VER; do
@@ -96,7 +93,8 @@ no_ipv4() { grep -v -E "$RE_IPV4" "$1"; }
 cidr() { grep '/' "$1"; }
 no_cidr() { grep -v '/' "$1"; }
 convert_ip() { while IFS= read -r _ip; do echo "$1:$_ip-$_ip"; done; }
-convert_cidr() {
+convert_cidr_v4() { while IFS= read -r _cidr; do echo "$1:$(echo "$_cidr" | iprange -j)"; done; }
+convert_cidr_v6() {
   while IFS= read -r _cidr; do
     echo "$1:$(ipcalc-ng --no-decorate --minaddr "$_cidr")-$(ipcalc-ng --no-decorate --maxaddr "$_cidr")"
   done
@@ -122,11 +120,11 @@ for url in $URL; do
   _error "Converting $total rules... "
   if [ -n "$OUT" ] || [ -n "$OUT4" ]; then
     no_cidr "$IN4" | convert_ip "$desc" >"$OUT4_TMP"
-    cidr "$IN4" | convert_cidr "$desc" >>"$OUT4_TMP"
+    cidr "$IN4" | convert_cidr_v4 "$desc" >>"$OUT4_TMP"
   fi
   if [ -n "$OUT" ] || [ -n "$OUT6" ]; then
     no_cidr "$IN6" | convert_ip "$desc" >"$OUT6_TMP"
-    cidr "$IN6" | convert_cidr "$desc" >>"$OUT6_TMP"
+    cidr "$IN6" | convert_cidr_v6 "$desc" >>"$OUT6_TMP"
   fi
   error "Done"
   if [ -n "$OUT" ]; then

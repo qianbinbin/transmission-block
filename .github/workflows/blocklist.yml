@@ -18,6 +18,7 @@ jobs:
       - name: Install dependences
         run: |
           sudo apt-get update
+          sudo apt-get install iprange
           sudo apt-get install ipcalc-ng
 
       - name: Checkout
