@@ -380,6 +380,8 @@ stop_web_server() {
 # WEB SERVER
 # ------------------------------------------------------------------------------
 
+RE_P2P='^[^:]*:[0-9a-fA-F\.:]+-[0-9a-fA-F\.:]+$'
+
 cleanup() {
   # Add the suffix '/' in case that $WORK_DIR is a symlink
   find "$WORK_DIR/" -type f \( -name '*.conf' -or -name '*.tmp' \) -delete
@@ -393,8 +395,9 @@ reload() {
   [ -n "$LEECHER_CLIENTS" ] && [ -f "$LEECHER_LIST" ] && {
     cat "$LEECHER_LIST" >>"$WEB_DIR/blocklist.p2p" || return 1
   }
-  [ -n "$EXTERNAL_BL" ] && ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 &&
-    xcat "$EXTERNAL_DIR"/*.data >>"$WEB_DIR/blocklist.p2p" # continue even error happened
+  [ -n "$EXTERNAL_BL" ] && ls "$EXTERNAL_DIR"/*.data >/dev/null 2>&1 && {
+    xcat "$EXTERNAL_DIR"/*.data | grep -o -E "$RE_P2P" >>"$WEB_DIR/blocklist.p2p"
+  }
   gzip -f "$WEB_DIR/blocklist.p2p" || return 1
   error "http://$BL_SERVER/blocklist.p2p.gz"
   _error "Requesting Transmission to update the blocklist... "
