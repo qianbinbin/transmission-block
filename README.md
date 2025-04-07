@@ -1,5 +1,7 @@
 # transmission-block
 
+* [English](README.en.md)
+
 Transmission 辅助脚本，屏蔽迅雷等吸血客户端以及在线屏蔽列表（黑名单）中的 IP 地址。
 
 特性：
@@ -9,7 +11,7 @@ Transmission 辅助脚本，屏蔽迅雷等吸血客户端以及在线屏蔽列�
 * 完全端到端访问，理论支持容器中的 Transmission，甚至可以运行在另一主机。
 * 支持受限用户运行。
 * 理论兼容 POSIX Shell 环境。
-* 同步转换 [PBH-BTN/BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules)
+* 同步转换 [BTN-Collected-Rules](https://github.com/PBH-BTN/BTN-Collected-Rules)
   为 Transmission 兼容的黑名单（详见
   [blocklist](https://github.com/qianbinbin/transmission-block/tree/blocklist) 分支）。
 
@@ -187,10 +189,10 @@ export TR_AUTH=username:password # 用户名和密码，可以加入到环境变
 
 * [waelisa/Best-blocklist](https://github.com/waelisa/Best-blocklist)：作者表示只禁止了坏节点和版权
   IP，不会禁止好节点。数据来源未知。
-* [I-BlockList - level1](https://www.iblocklist.com/list?list=ydxerpxkpcfqjaybcssw)：包括反
-  P2P 地址。其标注的来源 Bluetack 事实上已经关闭了很多年，但黑名单确实还在更新。I-BlockList 是商用的，网站还包括一些付费黑名单。
 * [mirror.codebucket.de - transmission](https://mirror.codebucket.de/transmission/)：主要包括恶意
   IP，但这似乎应该在防火墙禁止，而不是 P2P。
+* [I-BlockList - level1](https://www.iblocklist.com/list?list=ydxerpxkpcfqjaybcssw)：包括反
+  P2P 地址。其标注的来源 Bluetack 已经关闭了很多年，但奇怪的是黑名单还在更新。I-BlockList 是商用的，网站还包括一些付费黑名单。
 * [eMule Security](https://www.emule-security.org/)：包括了大量数据中心 IP，不推荐。
 
 <details>
