@@ -191,8 +191,10 @@ export TR_AUTH=username:password # 用户名和密码，可以加入到环境变
   IP，不会禁止好节点。数据来源未知。
 * [mirror.codebucket.de - transmission](https://mirror.codebucket.de/transmission/)：主要包括恶意
   IP，但这似乎应该在防火墙禁止，而不是 P2P。
-* [I-BlockList - level1](https://www.iblocklist.com/list?list=ydxerpxkpcfqjaybcssw)：包括反
-  P2P 地址。其标注的来源 Bluetack 已经关闭了很多年，但奇怪的是黑名单还在更新。I-BlockList 是商用的，网站还包括一些付费黑名单。
+* [I-BlockList - level1](https://www.iblocklist.com/list?list=ydxerpxkpcfqjaybcssw)：网站声称这是反
+  P2P 地址列表，但其标注的来源 Bluetack
+  事实上已经关闭了很多年，而奇怪的是黑名单还在“更新”，经检查发现[它似乎只是随机添加和删除一些 IP](https://github.com/qianbinbin/transmission-block/issues/11)。I-BlockList
+  是商用的，网站还包括一些付费黑名单。
 * [eMule Security](https://www.emule-security.org/)：包括了大量数据中心 IP，不推荐。
 
 <details>

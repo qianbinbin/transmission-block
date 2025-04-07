@@ -194,8 +194,10 @@ The following blocklists are collected from the Internet for reference.
   Mainly includes malicious IPs,
   but it seems this should be blocked by the firewall rather than P2P.
 * [I-BlockList - level1](https://www.iblocklist.com/list?list=ydxerpxkpcfqjaybcssw):
-  Includes anti-P2P addresses. The source Bluetack has been closed for many years,
-  but the blocklist is still being updated strangely. I-BlockList is commercial,
-  and their website also includes some paid blocklists.
+  The website claims that it includes anti-P2P addresses,
+  however the source Bluetack had been closed for many years,
+  but the blocklist is still being "updated" strangely; it seems
+  [it just randomly add and remove some IPs](https://github.com/qianbinbin/transmission-block/issues/11).
+  I-BlockList is commercial, and their website also provides some paid blocklists.
 * [eMule Security](https://www.emule-security.org/):
   Includes a large number of data center IPs, not recommended.
