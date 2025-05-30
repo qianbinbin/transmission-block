@@ -111,9 +111,9 @@ jobs:
           get_rules() {
             url="$1"
             while [ -n "$url" ]; do
-              headers=$(curl_gh_api -I "$1")
+              headers=$(curl_gh_api -I "$1") || return 1
               url=$(echo "$headers" | sed -n -E 's/.*<([^>]*)>; rel="next".*/\1/p')
-              content=$(curl_gh_api "$1")
+              content=$(curl_gh_api "$1") || return 1
               comments=$(printf '%s\n' "$content" | jq -r '.[] | select(.author_association == "OWNER").body')
               echo "$comments" | sed -n -E 's/^> rule: (.*$)/\1/p'
             done
