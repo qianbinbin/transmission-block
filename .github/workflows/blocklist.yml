@@ -80,6 +80,8 @@ jobs:
           {
             echo "## $DEST_NAME"
             echo ""
+            echo "[![$DEST_NAME](https://img.shields.io/date/$(date -d "$updated" +%s)?label=$DEST_NAME)](https://github.com/$GITHUB_REPOSITORY/blob/$TARGET_BRANCH/$DEST_PREFIX.p2p)"
+            echo ""
             echo "Source: $SRC under $SRC_LICENSE License"
             echo ""
             echo "Etag: $etag"
@@ -141,6 +143,8 @@ jobs:
           {
             echo ""
             echo "## $DEST_NAME"
+            echo ""
+            echo "[![$DEST_NAME](https://img.shields.io/date/$(date -d "$updated" +%s)?label=$DEST_NAME)](https://github.com/$GITHUB_REPOSITORY/blob/$TARGET_BRANCH/$DEST_PREFIX.p2p)"
             echo ""
             echo "Source: $SRC"
             echo ""
