@@ -9,7 +9,7 @@
 [ -z "${BL_SERVER+x}" ] && BL_SERVER="127.0.0.1:9098"
 # https://github.com/transmission/transmission/blob/main/libtransmission/clients.cc
 # https://github.com/PBH-BTN/quick-references/blob/main/peer_ids.md
-[ -z "${LEECHER_CLIENTS+x}" ] && LEECHER_CLIENTS='%FF%1D%FF%FF%FF8I%FF,-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa) 0\.13\.8,libtorrent (Rasterbar) 2\.0\.7,QQDownload,Thunder,Xfplay,Xunlei'
+[ -z "${LEECHER_CLIENTS+x}" ] && LEECHER_CLIENTS='%FF%1D%FF%FF%FF8I%FF,-GT0002-,-GT0003-,Baidu,libTorrent (Rakshasa) 0\.13\.8,libtorrent (Rasterbar) 2\.0\.7,QQDownload,Thunder,Xfplay,Xunlei,XunLei'
 [ -z "${WORK_DIR+x}" ] && WORK_DIR=./transmission-block
 # [ -z "${EXTERNAL_BL+x}" ] && EXTERNAL_BL=
 [ -z "${CHECK_INTERVAL+x}" ] && CHECK_INTERVAL=30
