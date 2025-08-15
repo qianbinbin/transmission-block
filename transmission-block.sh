@@ -45,7 +45,8 @@ Examples:
 Options:
   -t, --tr-server <url>
                       connect to the Transmission session at <url>
-                      (default: localhost:9091)
+                      (default: defined in transmission-remote, usually
+                      localhost:9091)
   -c, --check-interval <num>
                       set work interval in seconds for checking if the peers are
                       valid and/or blocklists are outdated, etc.; must be
@@ -152,7 +153,7 @@ TR_REMOTE=transmission-remote
 [ -n "$TR_SERVER" ] && TR_REMOTE="$TR_REMOTE $TR_SERVER"
 [ -n "$TR_AUTH" ] && TR_REMOTE="$TR_REMOTE --authenv"
 tr_remote() { $TR_REMOTE "$@"; }
-_error "Connecting to $TR_SERVER... "
+_error "Connecting to ${TR_SERVER:-default server}... "
 TR_VERSION=$(tr_remote --session-info | sed -n -E 's/.*Daemon version: ([^ ]*).*/\1/p')
 [ -z "$TR_VERSION" ] && error "Could not connect" && exit 1
 error "v$TR_VERSION"
